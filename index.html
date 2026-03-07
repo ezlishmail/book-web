@@ -3,47 +3,664 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=DM+Serif+Display:ital@0;1&family=Lato:wght@300;400&display=swap" rel="stylesheet">
+  <title>Poems — A Collection</title>
   <link rel="stylesheet" href="style.css" />
-  <title>Pokemon Magazine</title>
 </head>
 
 <body>
-  <div class="flipbook">
-    <div class="hard">My Pokemon Gallery <small>~ HankTheTank</small></div>
-    <div class="hard"></div>
-    <div>
-      <small>Lets Look At Some Amazing Pokemon ❤️</small>
-      <small>Gotta Catch 'Em All</small>
-    </div>
-    <div>
-      <img src="images/img-1.png" alt="" />
-      <small> Charmandar </small>
-    </div>
-    <div>
-      <img src="images/img-2.png" alt="" />
-      <small> Arbok </small>
-    </div>
-    <div>
-      <img src="images/img-3.png" alt="" />
-      <small> Pikachu </small>
-    </div>
-    <div>
-      <img src="images/img-4.png" alt="" />
-      <small> Mew </small>
-    </div>
-    <div>
-      <img src="images/img-5.png" alt="" />
-      <small> Darkrai </small>
-    </div>
-    <div class="hard"></div>
-    <div class="hard">Thank You <small>~ HankTheTank</small></div>
+
+  <!-- Ambient background -->
+  <div class="bg-ambient">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
   </div>
+
+  <!-- Mobile swipe hint -->
+  <div class="swipe-hint" id="swipeHint">
+    <span>Swipe to turn pages</span>
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 12H19M13 6L19 12L13 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+
+  <!-- Mobile navigation -->
+  <div class="mobile-nav">
+    <button class="nav-btn" id="prevBtn" onclick="prevPage()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M11 6L5 12L11 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <span class="page-indicator" id="pageIndicator">1 / 32</span>
+    <button class="nav-btn" id="nextBtn" onclick="nextPage()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 12H19M13 6L19 12L13 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+
+  <!-- Book wrapper -->
+  <div class="book-scene">
+    <div class="book-shadow"></div>
+
+    <div class="flipbook" id="flipbook">
+
+      <!-- ============================================================
+           COVER PAGE — Replace the cover image URL below ↓
+           To change the cover: update the src in the <img> tag below
+           or swap the background-image in style.css under .cover-page
+           ============================================================ -->
+      <div class="hard cover-page">
+        <div class="cover-content">
+          <!-- 🎨 COVER IMAGE — replace "images/cover.jpg" with your image path or URL -->
+          <div class="cover-image-wrap">
+            <img src="images/cover.jpg" alt="Cover" class="cover-img" onerror="this.style.display='none'" />
+            <!-- Decorative overlay always visible -->
+            <div class="cover-overlay"></div>
+          </div>
+          <div class="cover-text">
+            <p class="cover-eyebrow">A Collection of</p>
+            <h1 class="cover-title">Poems</h1>
+            <!-- ✍️ AUTHOR NAME — change the name below -->
+            <p class="cover-author">~ YourName</p>
+          </div>
+          <div class="cover-decoration">
+            <div class="deco-line"></div>
+            <svg class="deco-flower" width="40" height="40" viewBox="0 0 40 40" fill="none">
+              <circle cx="20" cy="20" r="3" fill="rgba(255,255,255,0.6)"/>
+              <ellipse cx="20" cy="12" rx="3" ry="6" fill="rgba(255,255,255,0.25)" transform="rotate(0 20 20)"/>
+              <ellipse cx="20" cy="12" rx="3" ry="6" fill="rgba(255,255,255,0.25)" transform="rotate(45 20 20)"/>
+              <ellipse cx="20" cy="12" rx="3" ry="6" fill="rgba(255,255,255,0.25)" transform="rotate(90 20 20)"/>
+              <ellipse cx="20" cy="12" rx="3" ry="6" fill="rgba(255,255,255,0.25)" transform="rotate(135 20 20)"/>
+            </svg>
+            <div class="deco-line"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Back of cover (blank) -->
+      <div class="hard back-cover-inner"></div>
+
+      <!-- ============================================================
+           INTRO PAGE (Page 1 of the book interior)
+           ============================================================ -->
+      <div class="page intro-page">
+        <div class="page-inner">
+          <p class="intro-quote">"Poetry is the spontaneous overflow of powerful feelings."</p>
+          <p class="intro-attribution">— William Wordsworth</p>
+          <div class="intro-divider">
+            <span>✦</span>
+          </div>
+          <p class="intro-body">Welcome to this little world of words. Turn the pages gently — each one holds a piece of the heart.</p>
+        </div>
+      </div>
+
+      <!-- TABLE OF CONTENTS (optional) -->
+      <div class="page toc-page">
+        <div class="page-inner">
+          <h2 class="toc-title">Contents</h2>
+          <div class="toc-list">
+            <div class="toc-item"><span class="toc-num">01</span><span class="toc-name">Poem Title One</span></div>
+            <div class="toc-item"><span class="toc-num">02</span><span class="toc-name">Poem Title Two</span></div>
+            <div class="toc-item"><span class="toc-num">03</span><span class="toc-name">Poem Title Three</span></div>
+            <div class="toc-item"><span class="toc-num">04</span><span class="toc-name">Poem Title Four</span></div>
+            <div class="toc-item"><span class="toc-num">05</span><span class="toc-name">Poem Title Five</span></div>
+            <div class="toc-item"><span class="toc-num">06</span><span class="toc-name">Poem Title Six</span></div>
+            <div class="toc-item"><span class="toc-num">07</span><span class="toc-name">Poem Title Seven</span></div>
+            <div class="toc-item"><span class="toc-num">08</span><span class="toc-name">Poem Title Eight</span></div>
+            <div class="toc-item"><span class="toc-num">09</span><span class="toc-name">Poem Title Nine</span></div>
+            <div class="toc-item"><span class="toc-num">10</span><span class="toc-name">Poem Title Ten</span></div>
+          </div>
+          <p class="toc-more">& 20 more poems…</p>
+        </div>
+        <div class="page-number">ii</div>
+      </div>
+
+      <!-- ============================================================
+           POEM PAGES — Duplicate this block for each of your 30 poems
+           Replace POEM TITLE and the poem lines below each block
+           ============================================================ -->
+
+      <!-- POEM 1 -->
+      <div class="page poem-page">
+        <div class="page-inner">
+          <div class="poem-number">I</div>
+          <h2 class="poem-title">Poem Title One</h2>
+          <div class="poem-divider"><span>—</span></div>
+          <div class="poem-body">
+            <p>Here is the first line of your poem,</p>
+            <p>and the second line follows here.</p>
+            <p>A third line blooms like morning light,</p>
+            <p>the fourth fades into night.</p>
+          </div>
+        </div>
+        <div class="page-number">1</div>
+      </div>
+
+      <div class="page poem-page">
+        <div class="page-inner">
+          <div class="poem-number">II</div>
+          <h2 class="poem-title">Poem Title Two</h2>
+          <div class="poem-divider"><span>—</span></div>
+          <div class="poem-body">
+            <p>Replace this with your second poem's lines,</p>
+            <p>let the stanzas breathe and flow.</p>
+            <p>Each word a stone across the stream,</p>
+            <p>each pause a place to grow.</p>
+          </div>
+        </div>
+        <div class="page-number">2</div>
+      </div>
+
+      <div class="page poem-page">
+        <div class="page-inner">
+          <div class="poem-number">III</div>
+          <h2 class="poem-title">Poem Title Three</h2>
+          <div class="poem-divider"><span>—</span></div>
+          <div class="poem-body">
+            <p>Your third poem lives on this page,</p>
+            <p>a quiet corner of your world.</p>
+            <p>The ink still warm, the feeling raw,</p>
+            <p>a banner left unfurled.</p>
+          </div>
+        </div>
+        <div class="page-number">3</div>
+      </div>
+
+      <div class="page poem-page">
+        <div class="page-inner">
+          <div class="poem-number">IV</div>
+          <h2 class="poem-title">Poem Title Four</h2>
+          <div class="poem-divider"><span>—</span></div>
+          <div class="poem-body">
+            <p>Paste your fourth poem's verses here,</p>
+            <p>each line on its own row.</p>
+            <p>Leave an empty &lt;p&gt;&lt;/p&gt; for stanza breaks,</p>
+            <p>and let the rhythm show.</p>
+          </div>
+        </div>
+        <div class="page-number">4</div>
+      </div>
+
+      <div class="page poem-page">
+        <div class="page-inner">
+          <div class="poem-number">V</div>
+          <h2 class="poem-title">Poem Title Five</h2>
+          <div class="poem-divider"><span>—</span></div>
+          <div class="poem-body">
+            <p>Fifth poem, fifth page — you're finding</p>
+            <p>your groove now. Keep going.</p>
+            <p>Add as many lines as your poem needs,</p>
+            <p>the layout will keep flowing.</p>
+          </div>
+        </div>
+        <div class="page-number">5</div>
+      </div>
+
+      <div class="page poem-page">
+        <div class="page-inner">
+          <div class="poem-number">VI</div>
+          <h2 class="poem-title">Poem Title Six</h2>
+          <div class="poem-divider"><span>—</span></div>
+          <div class="poem-body">
+            <p>Sixth poem here, replace freely.</p>
+            <p>Each stanza break: an empty &lt;p&gt; tag.</p>
+            <p></p>
+            <p>Like this — a breath between thoughts,</p>
+            <p>a pause, a gentle lag.</p>
+          </div>
+        </div>
+        <div class="page-number">6</div>
+      </div>
+
+      <div class="page poem-page">
+        <div class="page-inner">
+          <div class="poem-number">VII</div>
+          <h2 class="poem-title">Poem Title Seven</h2>
+          <div class="poem-divider"><span>—</span></div>
+          <div class="poem-body">
+            <p>Your seventh poem goes here now,</p>
+            <p>the pages turning soft and slow.</p>
+            <p>The book is filling up with you —</p>
+            <p>with everything you know.</p>
+          </div>
+        </div>
+        <div class="page-number">7</div>
+      </div>
+
+      <div class="page poem-page">
+        <div class="page-inner">
+          <div class="poem-number">VIII</div>
+          <h2 class="poem-title">Poem Title Eight</h2>
+          <div class="poem-divider"><span>—</span></div>
+          <div class="poem-body">
+            <p>Poem eight lives quietly here,</p>
+            <p>waiting for your words to land.</p>
+            <p>Swap these placeholder lines out fast —</p>
+            <p>the stage is yours, as planned.</p>
+          </div>
+        </div>
+        <div class="page-number">8</div>
+      </div>
+
+      <div class="page poem-page">
+        <div class="page-inner">
+          <div class="poem-number">IX</div>
+          <h2 class="poem-title">Poem Title Nine</h2>
+          <div class="poem-divider"><span>—</span></div>
+          <div class="poem-body">
+            <p>Nine poems in, the book grows warm,</p>
+            <p>familiar like an old friend's voice.</p>
+            <p>Place your verses on this page —</p>
+            <p>each word a careful choice.</p>
+          </div>
+        </div>
+        <div class="page-number">9</div>
+      </div>
+
+      <div class="page poem-page">
+        <div class="page-inner">
+          <div class="poem-number">X</div>
+          <h2 class="poem-title">Poem Title Ten</h2>
+          <div class="poem-divider"><span>—</span></div>
+          <div class="poem-body">
+            <p>Tenth poem — a milestone reached.</p>
+            <p>Twenty more wait in the wings.</p>
+            <p>Fill each page with what you've felt,</p>
+            <p>with all the small, true things.</p>
+          </div>
+        </div>
+        <div class="page-number">10</div>
+      </div>
+
+      <!-- POEMS 11–30: duplicate the block below and update the number, title, and lines -->
+      <div class="page poem-page">
+        <div class="page-inner">
+          <div class="poem-number">XI</div>
+          <h2 class="poem-title">Poem Title Eleven</h2>
+          <div class="poem-divider"><span>—</span></div>
+          <div class="poem-body">
+            <p>Add your eleventh poem here.</p>
+            <p>Duplicate this &lt;div class="page poem-page"&gt; block</p>
+            <p>for each of your remaining poems.</p>
+            <p>Just change the number, title, and lines.</p>
+          </div>
+        </div>
+        <div class="page-number">11</div>
+      </div>
+
+      <div class="page poem-page">
+        <div class="page-inner">
+          <div class="poem-number">XII</div>
+          <h2 class="poem-title">Poem Title Twelve</h2>
+          <div class="poem-divider"><span>—</span></div>
+          <div class="poem-body">
+            <p>Poem twelve placeholder.</p>
+            <p>Replace with your actual verse.</p>
+          </div>
+        </div>
+        <div class="page-number">12</div>
+      </div>
+
+      <div class="page poem-page">
+        <div class="page-inner">
+          <div class="poem-number">XIII</div>
+          <h2 class="poem-title">Poem Title Thirteen</h2>
+          <div class="poem-divider"><span>—</span></div>
+          <div class="poem-body">
+            <p>Poem thirteen placeholder.</p>
+            <p>Replace with your actual verse.</p>
+          </div>
+        </div>
+        <div class="page-number">13</div>
+      </div>
+
+      <div class="page poem-page">
+        <div class="page-inner">
+          <div class="poem-number">XIV</div>
+          <h2 class="poem-title">Poem Title Fourteen</h2>
+          <div class="poem-divider"><span>—</span></div>
+          <div class="poem-body">
+            <p>Poem fourteen placeholder.</p>
+            <p>Replace with your actual verse.</p>
+          </div>
+        </div>
+        <div class="page-number">14</div>
+      </div>
+
+      <div class="page poem-page">
+        <div class="page-inner">
+          <div class="poem-number">XV</div>
+          <h2 class="poem-title">Poem Title Fifteen</h2>
+          <div class="poem-divider"><span>—</span></div>
+          <div class="poem-body">
+            <p>Poem fifteen placeholder.</p>
+            <p>Replace with your actual verse.</p>
+          </div>
+        </div>
+        <div class="page-number">15</div>
+      </div>
+
+      <div class="page poem-page">
+        <div class="page-inner">
+          <div class="poem-number">XVI</div>
+          <h2 class="poem-title">Poem Title Sixteen</h2>
+          <div class="poem-divider"><span>—</span></div>
+          <div class="poem-body">
+            <p>Poem sixteen placeholder.</p>
+            <p>Replace with your actual verse.</p>
+          </div>
+        </div>
+        <div class="page-number">16</div>
+      </div>
+
+      <div class="page poem-page">
+        <div class="page-inner">
+          <div class="poem-number">XVII</div>
+          <h2 class="poem-title">Poem Title Seventeen</h2>
+          <div class="poem-divider"><span>—</span></div>
+          <div class="poem-body">
+            <p>Poem seventeen placeholder.</p>
+            <p>Replace with your actual verse.</p>
+          </div>
+        </div>
+        <div class="page-number">17</div>
+      </div>
+
+      <div class="page poem-page">
+        <div class="page-inner">
+          <div class="poem-number">XVIII</div>
+          <h2 class="poem-title">Poem Title Eighteen</h2>
+          <div class="poem-divider"><span>—</span></div>
+          <div class="poem-body">
+            <p>Poem eighteen placeholder.</p>
+            <p>Replace with your actual verse.</p>
+          </div>
+        </div>
+        <div class="page-number">18</div>
+      </div>
+
+      <div class="page poem-page">
+        <div class="page-inner">
+          <div class="poem-number">XIX</div>
+          <h2 class="poem-title">Poem Title Nineteen</h2>
+          <div class="poem-divider"><span>—</span></div>
+          <div class="poem-body">
+            <p>Poem nineteen placeholder.</p>
+            <p>Replace with your actual verse.</p>
+          </div>
+        </div>
+        <div class="page-number">19</div>
+      </div>
+
+      <div class="page poem-page">
+        <div class="page-inner">
+          <div class="poem-number">XX</div>
+          <h2 class="poem-title">Poem Title Twenty</h2>
+          <div class="poem-divider"><span>—</span></div>
+          <div class="poem-body">
+            <p>Poem twenty placeholder.</p>
+            <p>Replace with your actual verse.</p>
+          </div>
+        </div>
+        <div class="page-number">20</div>
+      </div>
+
+      <div class="page poem-page">
+        <div class="page-inner">
+          <div class="poem-number">XXI</div>
+          <h2 class="poem-title">Poem Title Twenty-One</h2>
+          <div class="poem-divider"><span>—</span></div>
+          <div class="poem-body">
+            <p>Poem twenty-one placeholder.</p>
+            <p>Replace with your actual verse.</p>
+          </div>
+        </div>
+        <div class="page-number">21</div>
+      </div>
+
+      <div class="page poem-page">
+        <div class="page-inner">
+          <div class="poem-number">XXII</div>
+          <h2 class="poem-title">Poem Title Twenty-Two</h2>
+          <div class="poem-divider"><span>—</span></div>
+          <div class="poem-body">
+            <p>Poem twenty-two placeholder.</p>
+            <p>Replace with your actual verse.</p>
+          </div>
+        </div>
+        <div class="page-number">22</div>
+      </div>
+
+      <div class="page poem-page">
+        <div class="page-inner">
+          <div class="poem-number">XXIII</div>
+          <h2 class="poem-title">Poem Title Twenty-Three</h2>
+          <div class="poem-divider"><span>—</span></div>
+          <div class="poem-body">
+            <p>Poem twenty-three placeholder.</p>
+            <p>Replace with your actual verse.</p>
+          </div>
+        </div>
+        <div class="page-number">23</div>
+      </div>
+
+      <div class="page poem-page">
+        <div class="page-inner">
+          <div class="poem-number">XXIV</div>
+          <h2 class="poem-title">Poem Title Twenty-Four</h2>
+          <div class="poem-divider"><span>—</span></div>
+          <div class="poem-body">
+            <p>Poem twenty-four placeholder.</p>
+            <p>Replace with your actual verse.</p>
+          </div>
+        </div>
+        <div class="page-number">24</div>
+      </div>
+
+      <div class="page poem-page">
+        <div class="page-inner">
+          <div class="poem-number">XXV</div>
+          <h2 class="poem-title">Poem Title Twenty-Five</h2>
+          <div class="poem-divider"><span>—</span></div>
+          <div class="poem-body">
+            <p>Poem twenty-five placeholder.</p>
+            <p>Replace with your actual verse.</p>
+          </div>
+        </div>
+        <div class="page-number">25</div>
+      </div>
+
+      <div class="page poem-page">
+        <div class="page-inner">
+          <div class="poem-number">XXVI</div>
+          <h2 class="poem-title">Poem Title Twenty-Six</h2>
+          <div class="poem-divider"><span>—</span></div>
+          <div class="poem-body">
+            <p>Poem twenty-six placeholder.</p>
+            <p>Replace with your actual verse.</p>
+          </div>
+        </div>
+        <div class="page-number">26</div>
+      </div>
+
+      <div class="page poem-page">
+        <div class="page-inner">
+          <div class="poem-number">XXVII</div>
+          <h2 class="poem-title">Poem Title Twenty-Seven</h2>
+          <div class="poem-divider"><span>—</span></div>
+          <div class="poem-body">
+            <p>Poem twenty-seven placeholder.</p>
+            <p>Replace with your actual verse.</p>
+          </div>
+        </div>
+        <div class="page-number">27</div>
+      </div>
+
+      <div class="page poem-page">
+        <div class="page-inner">
+          <div class="poem-number">XXVIII</div>
+          <h2 class="poem-title">Poem Title Twenty-Eight</h2>
+          <div class="poem-divider"><span>—</span></div>
+          <div class="poem-body">
+            <p>Poem twenty-eight placeholder.</p>
+            <p>Replace with your actual verse.</p>
+          </div>
+        </div>
+        <div class="page-number">28</div>
+      </div>
+
+      <div class="page poem-page">
+        <div class="page-inner">
+          <div class="poem-number">XXIX</div>
+          <h2 class="poem-title">Poem Title Twenty-Nine</h2>
+          <div class="poem-divider"><span>—</span></div>
+          <div class="poem-body">
+            <p>Poem twenty-nine placeholder.</p>
+            <p>Replace with your actual verse.</p>
+          </div>
+        </div>
+        <div class="page-number">29</div>
+      </div>
+
+      <div class="page poem-page">
+        <div class="page-inner">
+          <div class="poem-number">XXX</div>
+          <h2 class="poem-title">Poem Title Thirty</h2>
+          <div class="poem-divider"><span>—</span></div>
+          <div class="poem-body">
+            <p>Your final poem rests here now,</p>
+            <p>the last of thirty — done.</p>
+            <p>The book is yours, the words are yours,</p>
+            <p>the journey has begun.</p>
+          </div>
+        </div>
+        <div class="page-number">30</div>
+      </div>
+
+      <!-- Back matter blank page -->
+      <div class="hard back-cover-inner">
+        <div class="back-inner-content">
+          <svg width="50" height="50" viewBox="0 0 40 40" fill="none" opacity="0.3">
+            <circle cx="20" cy="20" r="3" fill="white"/>
+            <ellipse cx="20" cy="12" rx="3" ry="6" fill="white" transform="rotate(0 20 20)"/>
+            <ellipse cx="20" cy="12" rx="3" ry="6" fill="white" transform="rotate(45 20 20)"/>
+            <ellipse cx="20" cy="12" rx="3" ry="6" fill="white" transform="rotate(90 20 20)"/>
+            <ellipse cx="20" cy="12" rx="3" ry="6" fill="white" transform="rotate(135 20 20)"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- BACK COVER -->
+      <div class="hard back-cover-page">
+        <div class="back-cover-content">
+          <div class="back-cover-quote">
+            <p>"Words are, in my not so humble opinion, our most inexhaustible source of magic."</p>
+          </div>
+          <div class="back-cover-divider">✦</div>
+          <!-- ✍️ BACK COVER AUTHOR — change name here too -->
+          <p class="back-cover-author">~ YourName</p>
+        </div>
+      </div>
+
+    </div><!-- end .flipbook -->
+  </div><!-- end .book-scene -->
+
+  <!-- Desktop navigation arrows -->
+  <button class="arrow-btn arrow-left" id="arrowLeft" onclick="prevPage()">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M11 6L5 12L11 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
+  <button class="arrow-btn arrow-right" id="arrowRight" onclick="nextPage()">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M5 12H19M13 6L19 12L13 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
 
   <script src="jquery.js"></script>
   <script src="turn.js"></script>
   <script>
-    $(".flipbook").turn();
+    $(function () {
+      var isMobile = window.innerWidth <= 700;
+      var bookW = isMobile ? window.innerWidth * 0.92 : Math.min(window.innerWidth * 0.88, 960);
+      var bookH = isMobile ? bookW * 1.35 : bookW * 0.58;
+
+      if (isMobile) {
+        // Single-page mode on mobile
+        $("#flipbook").turn({
+          width: bookW,
+          height: bookH,
+          autoCenter: true,
+          display: "single",
+          acceleration: true,
+          gradients: true,
+          elevation: 50,
+          duration: 700,
+          when: {
+            turning: function (e, page) {
+              updateNav(page);
+            }
+          }
+        });
+      } else {
+        $("#flipbook").turn({
+          width: bookW,
+          height: bookH,
+          autoCenter: true,
+          display: "double",
+          acceleration: true,
+          gradients: true,
+          elevation: 50,
+          duration: 800,
+          when: {
+            turning: function (e, page) {
+              updateNav(page);
+            }
+          }
+        });
+      }
+
+      // Hide swipe hint after first interaction
+      var hintDismissed = false;
+      $("#flipbook").on("touchstart mousedown", function () {
+        if (!hintDismissed) {
+          $("#swipeHint").fadeOut(400);
+          hintDismissed = true;
+        }
+      });
+
+      // Keyboard navigation
+      $(document).keydown(function (e) {
+        if (e.keyCode === 37) prevPage();
+        if (e.keyCode === 39) nextPage();
+      });
+
+      // Touch swipe on mobile
+      var touchStartX = 0;
+      document.getElementById("flipbook").addEventListener("touchstart", function (e) {
+        touchStartX = e.touches[0].clientX;
+      }, { passive: true });
+
+      document.getElementById("flipbook").addEventListener("touchend", function (e) {
+        var dx = e.changedTouches[0].clientX - touchStartX;
+        if (Math.abs(dx) > 50) {
+          if (dx < 0) nextPage();
+          else prevPage();
+        }
+      }, { passive: true });
+
+      updateNav(1);
+    });
+
+    function prevPage() {
+      $("#flipbook").turn("previous");
+    }
+
+    function nextPage() {
+      $("#flipbook").turn("next");
+    }
+
+    function updateNav(page) {
+      var total = $("#flipbook").turn("pages");
+      $("#pageIndicator").text(page + " / " + total);
+      $("#prevBtn, #arrowLeft").toggleClass("disabled", page <= 1);
+      $("#nextBtn, #arrowRight").toggleClass("disabled", page >= total);
+    }
   </script>
 </body>
 
