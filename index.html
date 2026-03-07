@@ -2,812 +2,869 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,400;1,600&family=EB+Garamond:ital,wght@0,400;1,400&family=Cormorant+Upright:wght@300;400&display=swap" rel="stylesheet">
 <title>Verses — A Poetry Collection</title>
 <style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 
-/* ─────────────────────────────────────────────
-   RESET
-───────────────────────────────────────────── */
-*, *::before, *::after {
-  margin: 0; padding: 0;
-  box-sizing: border-box;
-  -webkit-tap-highlight-color: transparent;
+html,body{
+  width:100%;height:100%;overflow:hidden;
+  overscroll-behavior:none;touch-action:none;
+  font-family:'EB Garamond',Georgia,serif;
+  background:#160c12;
 }
 
-/* ─────────────────────────────────────────────
-   BACKGROUND — deep dusty rose / mauve
-───────────────────────────────────────────── */
-html, body {
-  width: 100%; height: 100%;
-  overflow: hidden;
-  overscroll-behavior: none;
-  font-family: 'EB Garamond', Georgia, serif;
-  background: #1a0e14;
-}
-
-.bg {
-  position: fixed; inset: 0; z-index: 0;
+/* ── BACKGROUND ── */
+.bg{
+  position:fixed;inset:0;z-index:0;
   background:
-    radial-gradient(ellipse 90% 70% at 50% -10%, rgba(180,100,120,0.13) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 60% at 10% 90%, rgba(100,50,70,0.25) 0%, transparent 55%),
-    radial-gradient(ellipse 50% 50% at 90% 10%, rgba(80,40,60,0.2) 0%, transparent 55%),
-    linear-gradient(160deg, #221018 0%, #130a10 55%, #1e0f18 100%);
-}
-/* subtle overhead glow */
-.bg::after {
-  content: "";
-  position: absolute; top: -80px; left: 50%; transform: translateX(-50%);
-  width: 700px; height: 500px;
-  background: radial-gradient(ellipse, rgba(210,140,160,0.06) 0%, transparent 60%);
-  pointer-events: none;
+    radial-gradient(ellipse 90% 60% at 50% 0%,rgba(170,90,110,0.11) 0%,transparent 55%),
+    radial-gradient(ellipse 55% 65% at 8% 92%,rgba(90,40,60,0.22) 0%,transparent 55%),
+    radial-gradient(ellipse 55% 55% at 92% 8%,rgba(70,30,50,0.18) 0%,transparent 55%),
+    linear-gradient(155deg,#200e18 0%,#110810 55%,#1c0d16 100%);
 }
 
-/* ─────────────────────────────────────────────
-   SCENE
-───────────────────────────────────────────── */
-.scene {
-  position: relative; z-index: 1;
-  width: 100vw; height: 100vh;
-  display: flex; align-items: center; justify-content: center;
+/* ── SCENE ── */
+.scene{
+  position:relative;z-index:1;
+  width:100vw;height:100vh;
+  display:flex;align-items:center;justify-content:center;
 }
 
-/* ─────────────────────────────────────────────
-   BOOK WRAP
-   Shadow as a separate element — never repaints
-   during turn.js animation (no filter on parent)
-───────────────────────────────────────────── */
-.book-wrap {
-  position: relative; z-index: 2;
-  /* NO filter here — it causes repaint on every animation frame */
-}
-.book-shadow {
-  position: absolute;
-  bottom: -28px; left: 4%; right: 4%; height: 50px;
-  background: radial-gradient(ellipse, rgba(0,0,0,0.65) 0%, transparent 70%);
-  pointer-events: none;
-  z-index: -1;
+/* ══════════════════════════════════════
+   BOOK — CSS 3D flip, no library
+══════════════════════════════════════ */
+.book-container{
+  position:relative;
+  /* perspective makes the 3D flip look real */
+  perspective:2000px;
+  -webkit-perspective:2000px;
 }
 
-/* ─────────────────────────────────────────────
-   TURN.JS CORE — critical for no-glitch
-───────────────────────────────────────────── */
-#flipbook {
-  /* GPU layer for the container */
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-  will-change: transform;
+/* The visible book spread */
+.book{
+  position:relative;
+  display:flex;
+  /* rounded corners on cover edges only — handled per-side */
 }
 
-/* turn.js sets these itself — do NOT override position/size */
-#flipbook .page,
-#flipbook .hard {
-  /* overflow hidden is required */
-  overflow: hidden;
+/* Drop shadow UNDER the book — separate element so it never repaints */
+.book-shadow{
+  position:absolute;
+  bottom:-24px;left:5%;right:5%;height:40px;
+  background:radial-gradient(ellipse,rgba(0,0,0,0.6) 0%,transparent 70%);
+  z-index:-1;pointer-events:none;
 }
 
-/* ─────────────────────────────────────────────
-   FRONT COVER  — deep mauve / plum leather
-───────────────────────────────────────────── */
-.front-cover {
-  /* Rounded left corners only */
-  border-radius: 10px 0 0 10px;
-  overflow: hidden;
-  position: relative;
-  display: flex; align-items: center; justify-content: center;
+/* ── PAGE WRAPPER ── holds left + right side of a spread ── */
+.spread{
+  position:absolute;inset:0;
+  display:flex;
+  pointer-events:none;
 }
-/* Leather texture via layered gradients */
-.front-cover::before {
-  content: "";
-  position: absolute; inset: 0;
+
+/* ── SINGLE PAGE (half the spread width) ── */
+.pg{
+  width:50%;height:100%;
+  position:relative;overflow:hidden;
+  flex-shrink:0;
+  /* GPU layer */
+  transform:translateZ(0);
+  -webkit-transform:translateZ(0);
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+}
+
+/* ── FRONT COVER left half ── */
+.pg-cover-left{
+  border-radius:var(--r) 0 0 var(--r);
+  background:var(--cover-bg);
+}
+/* ── BACK COVER right half ── */
+.pg-cover-right{
+  border-radius:0 var(--r) var(--r) 0;
+  background:var(--cover-bg);
+}
+/* ── PAPER page ── */
+.pg-paper{background:#fdf5f0;}
+
+/* ════════════════════════════
+   3D FLIP ANIMATION
+════════════════════════════ */
+/* The flip card wraps one turning leaf */
+.flip-card{
+  position:absolute;
+  top:0;right:0;         /* starts on right side */
+  width:50%;height:100%;
+  transform-origin:left center;
+  transform-style:preserve-3d;
+  -webkit-transform-style:preserve-3d;
+  z-index:10;
+  pointer-events:none;
+  /* default: no flip */
+  transition:none;
+}
+.flip-card.animate{
+  transition:transform var(--dur) cubic-bezier(0.645,0.045,0.355,1.000);
+}
+/* front face = current right page */
+.flip-front,.flip-back{
+  position:absolute;inset:0;
+  overflow:hidden;
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+}
+.flip-back{
+  transform:rotateY(180deg);
+  -webkit-transform:rotateY(180deg);
+}
+/* When flipping FORWARD: card rotates from 0 to -180 */
+/* When flipping BACKWARD: card rotates from -180 to 0 */
+
+/* Fold shadow overlay — gives depth during flip */
+.flip-fold{
+  position:absolute;inset:0;
+  background:linear-gradient(to right,rgba(0,0,0,0.18) 0%,transparent 40%);
+  pointer-events:none;opacity:0;
+  transition:opacity var(--dur) ease;
+  z-index:2;
+}
+.flip-card.animate .flip-fold{opacity:1;}
+
+/* ════════════════════════════
+   COVER DESIGN
+════════════════════════════ */
+:root{
+  --cover-bg:#2a1020;
+  --gold:rgba(210,168,185,0.45);
+  --gold-bright:#d4a8b8;
+  --r:10px;
+  --dur:700ms;
+}
+
+.cover-inner{
+  width:100%;height:100%;
+  position:relative;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:8%;text-align:center;
   background:
-    radial-gradient(ellipse at 35% 25%, rgba(120,60,85,0.5) 0%, transparent 55%),
-    radial-gradient(ellipse at 65% 75%, rgba(60,20,40,0.6) 0%, transparent 55%),
-    repeating-linear-gradient(128deg, transparent 0, transparent 4px, rgba(255,255,255,0.014) 4px, rgba(255,255,255,0.014) 5px),
-    linear-gradient(155deg, #3d1a2a 0%, #251018 55%, #341522 100%);
-  border-radius: inherit;
+    radial-gradient(ellipse at 35% 28%,rgba(110,50,75,0.5) 0%,transparent 55%),
+    radial-gradient(ellipse at 65% 72%,rgba(50,15,35,0.6) 0%,transparent 55%),
+    repeating-linear-gradient(128deg,transparent 0,transparent 4px,rgba(255,255,255,0.013) 4px,rgba(255,255,255,0.013) 5px),
+    linear-gradient(155deg,#3a1228 0%,#220e1a 55%,#301020 100%);
 }
-/* outer gold frame */
-.front-cover::after {
-  content: "";
-  position: absolute; inset: 4.5%;
-  border: 1px solid rgba(210,170,150,0.3);
-  border-radius: 2px;
-  pointer-events: none;
-  z-index: 2;
+/* border frame */
+.cover-inner::before{
+  content:"";position:absolute;inset:5%;
+  border:1px solid var(--gold);
+  pointer-events:none;z-index:2;
 }
-/* spine shadow */
-.front-cover .spine {
-  position: absolute; top: 0; left: 0; width: 14px; height: 100%;
-  background: linear-gradient(to right, rgba(0,0,0,0.75), rgba(0,0,0,0.08), transparent);
-  z-index: 5; border-radius: 10px 0 0 10px; pointer-events: none;
-}
-/* inner frame */
-.front-cover .inner-frame {
-  position: absolute; inset: 6%;
-  border: 1px solid rgba(210,170,150,0.1);
-  border-radius: 1px;
-  pointer-events: none; z-index: 2;
+.cover-inner::after{
+  content:"";position:absolute;inset:6.5%;
+  border:1px solid rgba(210,168,185,0.12);
+  pointer-events:none;z-index:2;
 }
 /* corner ornaments */
-.front-cover .cn {
-  position: absolute; width: 20px; height: 20px;
-  border-color: rgba(210,170,150,0.5); border-style: solid; z-index: 3;
+.cn{position:absolute;width:18px;height:18px;border-style:solid;border-color:rgba(210,168,185,0.55);z-index:3;}
+.cn.tl{top:4%;left:4%;border-width:1.5px 0 0 1.5px;}
+.cn.tr{top:4%;right:4%;border-width:1.5px 1.5px 0 0;}
+.cn.bl{bottom:4%;left:4%;border-width:0 0 1.5px 1.5px;}
+.cn.br{bottom:4%;right:4%;border-width:0 1.5px 1.5px 0;}
+/* spine shadow */
+.spine-shadow{
+  position:absolute;top:0;left:0;width:14px;height:100%;
+  background:linear-gradient(to right,rgba(0,0,0,0.7),rgba(0,0,0,0.06),transparent);
+  z-index:5;pointer-events:none;
 }
-.cn.tl { top: 4%;   left: 4%;   border-width: 1.5px 0 0 1.5px; }
-.cn.tr { top: 4%;   right: 4%;  border-width: 1.5px 1.5px 0 0; }
-.cn.bl { bottom: 4%; left: 4%;  border-width: 0 0 1.5px 1.5px; }
-.cn.br { bottom: 4%; right: 4%; border-width: 0 1.5px 1.5px 0; }
-
-.fc-body {
-  position: relative; z-index: 4;
-  display: flex; flex-direction: column; align-items: center;
-  width: 100%; padding: 9%;
-  text-align: center;
-}
-
-/* cover image box */
-.cov-img-wrap {
-  width: 56%; aspect-ratio: 3/4;
-  border: 1px solid rgba(210,170,150,0.35);
-  box-shadow: 0 6px 35px rgba(0,0,0,0.65), inset 0 0 25px rgba(0,0,0,0.45);
-  overflow: hidden; position: relative;
-  margin-bottom: 7%; flex-shrink: 0;
-}
-.cov-img-wrap img {
-  width: 100%; height: 100%;
-  object-fit: cover; display: block;
-  opacity: 0.55; mix-blend-mode: luminosity;
-}
-.cov-img-wrap .fallback {
-  position: absolute; inset: 0;
-  background: linear-gradient(145deg, #4a1f30 0%, #251018 100%);
-  display: flex; align-items: center; justify-content: center;
-}
-.fallback svg { opacity: 0.2; }
-
-.cov-eyebrow {
-  font-family: 'Cormorant Upright', serif; font-weight: 300;
-  font-size: clamp(7px, 0.8vw, 10px);
-  letter-spacing: 0.48em; text-transform: uppercase;
-  color: #d4a8b8; opacity: 0.65; margin-bottom: 8px;
-}
-.cov-title {
-  font-family: 'Playfair Display', serif;
-  font-style: italic; font-weight: 400;
-  font-size: clamp(20px, 3vw, 38px);
-  color: #f5e8ee; line-height: 1.05;
-  text-shadow: 0 2px 20px rgba(0,0,0,0.6);
-}
-.cov-rule {
-  width: 48%; height: 1px; margin: 10px auto;
-  background: linear-gradient(to right, transparent, rgba(210,168,185,0.55), transparent);
-}
-.cov-author {
-  font-family: 'EB Garamond', serif; font-style: italic;
-  font-size: clamp(9px, 1.1vw, 13px);
-  color: #d4a8b8; opacity: 0.7; letter-spacing: 0.12em;
+.spine-shadow-r{
+  position:absolute;top:0;right:0;width:14px;height:100%;
+  background:linear-gradient(to left,rgba(0,0,0,0.7),rgba(0,0,0,0.06),transparent);
+  z-index:5;pointer-events:none;
 }
 
-/* ─────────────────────────────────────────────
-   BACK OF FRONT COVER (inner dark left page)
-───────────────────────────────────────────── */
-.inner-dark {
-  background: linear-gradient(140deg, #2e1220 0%, #1e0e18 100%) !important;
-  display: flex; align-items: flex-end; justify-content: flex-end;
-  padding: 9%; overflow: hidden;
+/* ── Cover image ──
+   ✏️  To set your cover: replace src="images/cover.jpg"
+   Or drop your image file next to index.html and use its filename.
+   Supported: jpg, png, webp
+*/
+.cov-img-box{
+  width:62%;aspect-ratio:3/4;
+  border:1px solid rgba(210,168,185,0.35);
+  box-shadow:0 6px 30px rgba(0,0,0,0.6),inset 0 0 22px rgba(0,0,0,0.4);
+  overflow:hidden;position:relative;
+  margin-bottom:6%;flex-shrink:0;z-index:1;
 }
-.inner-dark span {
-  font-family: 'EB Garamond', serif; font-style: italic;
-  font-size: clamp(7px, 0.72vw, 9px);
-  letter-spacing: 0.16em; color: rgba(210,168,185,0.18);
-  writing-mode: vertical-rl;
+.cov-img-box img{
+  width:100%;height:100%;object-fit:cover;display:block;
+}
+/* shown when no image */
+.cov-img-box .no-img{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(145deg,#4a1f32 0%,#251018 100%);
+}
+.no-img svg{opacity:0.2;}
+
+.cov-texts{position:relative;z-index:1;}
+.cov-eye{
+  font-family:'Cormorant Upright',serif;font-weight:300;
+  font-size:clamp(7px,0.82vw,10px);letter-spacing:0.48em;text-transform:uppercase;
+  color:var(--gold-bright);opacity:0.62;margin-bottom:8px;
+}
+.cov-ttl{
+  font-family:'Playfair Display',serif;font-style:italic;font-weight:400;
+  font-size:clamp(18px,2.8vw,36px);color:#f5e8ee;line-height:1.05;
+  text-shadow:0 2px 18px rgba(0,0,0,0.6);
+}
+.cov-rule{width:46%;height:1px;margin:9px auto;background:linear-gradient(to right,transparent,rgba(210,168,185,0.5),transparent);}
+.cov-auth{
+  font-family:'EB Garamond',serif;font-style:italic;
+  font-size:clamp(9px,1.05vw,13px);color:var(--gold-bright);opacity:0.68;letter-spacing:0.12em;
 }
 
-/* ─────────────────────────────────────────────
-   PAPER PAGES — shared warm cream base
-───────────────────────────────────────────── */
-.paper {
-  background: #fdf5f0 !important;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  position: relative; overflow: hidden;
+/* ── Inner dark page ── */
+.inner-dark{
+  width:100%;height:100%;
+  background:linear-gradient(140deg,#2c1020 0%,#1c0e18 100%);
+  display:flex;align-items:flex-end;justify-content:flex-end;padding:9%;
 }
-/* Warm vignette on every paper page */
-.paper::before {
-  content: ""; position: absolute; inset: 0; pointer-events: none;
+.inner-dark span{
+  font-family:'EB Garamond',serif;font-style:italic;
+  font-size:clamp(7px,0.7vw,9px);letter-spacing:0.16em;
+  color:rgba(210,168,185,0.17);writing-mode:vertical-rl;
+}
+
+/* ── Paper page interior ── */
+.paper-inner{
+  width:100%;height:100%;position:relative;overflow:hidden;
+  background:#fdf5f0;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+}
+.paper-inner::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
   background:
-    radial-gradient(ellipse 80% 60% at 20% 15%, rgba(180,120,130,0.045) 0%, transparent 55%),
-    radial-gradient(ellipse 70% 70% at 80% 85%, rgba(150,90,100,0.035) 0%, transparent 55%),
-    radial-gradient(ellipse 100% 100% at 50% 50%, transparent 60%, rgba(0,0,0,0.04) 100%);
+    radial-gradient(ellipse 80% 55% at 18% 14%,rgba(180,120,130,0.04) 0%,transparent 55%),
+    radial-gradient(ellipse 70% 65% at 82% 86%,rgba(150,85,100,0.034) 0%,transparent 55%),
+    radial-gradient(ellipse 100% 100% at 50% 50%,transparent 55%,rgba(0,0,0,0.035) 100%);
 }
 
-/* ─────────────────────────────────────────────
-   TITLE PAGE
-───────────────────────────────────────────── */
-.title-page {
-  text-align: center; padding: 11%;
-}
-.tp-line {
-  width: 1px; margin: 0 auto;
-  background: linear-gradient(to bottom, transparent, #7a2a40);
-}
-.tp-line.bot {
-  background: linear-gradient(to bottom, #7a2a40, transparent);
-}
-.tp-eye {
-  font-family: 'Cormorant Upright', serif; font-weight: 300;
-  font-size: clamp(7px, 0.78vw, 9px);
-  letter-spacing: 0.5em; text-transform: uppercase;
-  color: #a08090; margin-bottom: 13px; position: relative; z-index: 1;
-}
-.tp-title {
-  font-family: 'Playfair Display', serif;
-  font-style: italic; font-weight: 400;
-  font-size: clamp(26px, 4vw, 50px);
-  color: #1a0e14; line-height: 1.0;
-  margin-bottom: 8px; position: relative; z-index: 1;
-}
-.tp-sub {
-  font-family: 'EB Garamond', serif; font-style: italic;
-  font-size: clamp(10px, 1.1vw, 13px); color: #6e5060;
-  margin-bottom: 18px; position: relative; z-index: 1;
-}
-.tp-rule {
-  width: 30%; height: 1px; margin: 0 auto 16px;
-  background: linear-gradient(to right, transparent, rgba(122,42,64,0.25), transparent);
-  position: relative; z-index: 1;
-}
-.tp-author {
-  font-family: 'EB Garamond', serif;
-  font-size: clamp(10px, 1.1vw, 13px);
-  color: #4a3040; letter-spacing: 0.1em;
-  position: relative; z-index: 1;
-}
+/* ── TITLE PAGE ── */
+.tp{padding:11%;text-align:center;width:100%;position:relative;z-index:1;}
+.tp-vl{width:1px;background:linear-gradient(to bottom,transparent,#7a2a40);margin:0 auto 16px;}
+.tp-vlb{width:1px;background:linear-gradient(to bottom,#7a2a40,transparent);margin:16px auto 0;}
+.tp-eye{font-family:'Cormorant Upright',serif;font-weight:300;font-size:clamp(7px,0.78vw,9px);letter-spacing:0.5em;text-transform:uppercase;color:#a08090;margin-bottom:12px;display:block;}
+.tp-ttl{font-family:'Playfair Display',serif;font-style:italic;font-weight:400;font-size:clamp(24px,3.8vw,48px);color:#1a0e14;line-height:1.0;margin-bottom:8px;display:block;}
+.tp-sub{font-family:'EB Garamond',serif;font-style:italic;font-size:clamp(10px,1.1vw,13px);color:#6e5060;margin-bottom:16px;display:block;}
+.tp-rule{width:30%;height:1px;margin:0 auto 14px;background:linear-gradient(to right,transparent,rgba(122,42,64,0.22),transparent);}
+.tp-auth{font-family:'EB Garamond',serif;font-size:clamp(10px,1.1vw,13px);color:#4a3040;letter-spacing:0.1em;display:block;}
 
-/* ─────────────────────────────────────────────
-   DEDICATION PAGE
-───────────────────────────────────────────── */
-.ded-page { padding: 14%; text-align: center; }
-.ded-q {
-  font-family: 'Playfair Display', serif; font-style: italic;
-  font-size: clamp(11px, 1.45vw, 17px);
-  color: #4a3040; line-height: 2; margin-bottom: 18px;
-  position: relative; z-index: 1;
-}
-.ded-attr {
-  font-family: 'EB Garamond', serif;
-  font-size: clamp(9px, 1vw, 12px);
-  letter-spacing: 0.22em; color: #a08090;
-  position: relative; z-index: 1;
-}
+/* ── DEDICATION ── */
+.ded{padding:14%;text-align:center;width:100%;position:relative;z-index:1;}
+.ded-q{font-family:'Playfair Display',serif;font-style:italic;font-size:clamp(11px,1.4vw,17px);color:#4a3040;line-height:2;margin-bottom:16px;}
+.ded-at{font-family:'EB Garamond',serif;font-size:clamp(9px,0.98vw,12px);letter-spacing:0.22em;color:#a08090;}
 
-/* ─────────────────────────────────────────────
-   POEM PAGES
-───────────────────────────────────────────── */
-.poem-page { padding: 8% 10%; }
-.poem-inner {
-  position: relative; z-index: 1;
-  width: 80%; text-align: center;
-  display: flex; flex-direction: column; align-items: center;
-}
-.poem-roman {
-  font-family: 'Cormorant Upright', serif; font-weight: 300;
-  font-size: clamp(7px, 0.75vw, 9px);
-  letter-spacing: 0.45em; text-transform: uppercase;
-  color: #7a2a40; opacity: 0.5; margin-bottom: 8px;
-}
-.poem-title {
-  font-family: 'Playfair Display', serif;
-  font-style: italic; font-weight: 400;
-  font-size: clamp(15px, 1.85vw, 22px);
-  color: #1a0e14; line-height: 1.2; margin-bottom: 12px;
-}
-.poem-orn {
-  color: #7a2a40; opacity: 0.3;
-  font-size: clamp(9px, 0.85vw, 11px);
-  letter-spacing: 0.65em; margin-bottom: 14px;
-}
-.poem-body {
-  font-family: 'EB Garamond', serif; font-style: italic;
-  font-size: clamp(11.5px, 1.28vw, 16px);
-  color: #4a3040; line-height: 2.1; text-align: center;
-}
-.poem-body p { min-height: 1.1em; }
-.pgnum {
-  position: absolute; bottom: 5%; width: 100%; text-align: center;
-  font-family: 'Cormorant Upright', serif; font-weight: 300;
-  font-size: clamp(7px, 0.72vw, 9px);
-  letter-spacing: 0.35em; color: #a08090; opacity: 0.4; z-index: 1;
-}
+/* ── POEM PAGE ── */
+.poem{padding:8% 9%;width:100%;position:relative;z-index:1;}
+.poem-inner{text-align:center;display:flex;flex-direction:column;align-items:center;width:82%;margin:0 auto;}
+.p-roman{font-family:'Cormorant Upright',serif;font-weight:300;font-size:clamp(7px,0.74vw,9px);letter-spacing:0.45em;text-transform:uppercase;color:#7a2a40;opacity:0.5;margin-bottom:7px;}
+.p-title{font-family:'Playfair Display',serif;font-style:italic;font-weight:400;font-size:clamp(14px,1.8vw,22px);color:#1a0e14;line-height:1.2;margin-bottom:11px;}
+.p-orn{color:#7a2a40;opacity:0.28;font-size:clamp(9px,0.82vw,11px);letter-spacing:0.65em;margin-bottom:13px;}
+.p-body{font-family:'EB Garamond',serif;font-style:italic;font-size:clamp(11.5px,1.26vw,16px);color:#4a3040;line-height:2.1;text-align:center;}
+.p-body p{min-height:1.1em;}
+.p-num{position:absolute;bottom:5%;width:100%;text-align:center;font-family:'Cormorant Upright',serif;font-weight:300;font-size:clamp(7px,0.7vw,9px);letter-spacing:0.35em;color:#a08090;opacity:0.38;}
 
-/* ─────────────────────────────────────────────
-   BACK COVER — rounded right corners
-───────────────────────────────────────────── */
-.back-cover {
-  border-radius: 0 10px 10px 0;
-  overflow: hidden;
-  position: relative;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  padding: 13%;
-}
-.back-cover::before {
-  content: ""; position: absolute; inset: 0; border-radius: inherit;
+/* ── BACK COVER ── */
+.back-cover-inner{
+  width:100%;height:100%;position:relative;overflow:hidden;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:13%;
   background:
-    radial-gradient(ellipse at 55% 30%, rgba(100,40,60,0.5) 0%, transparent 55%),
-    radial-gradient(ellipse at 30% 70%, rgba(50,15,30,0.5) 0%, transparent 55%),
-    repeating-linear-gradient(128deg, transparent 0, transparent 4px, rgba(255,255,255,0.012) 4px, rgba(255,255,255,0.012) 5px),
-    linear-gradient(155deg, #361422 0%, #1e0e18 100%);
+    radial-gradient(ellipse at 55% 32%,rgba(90,35,55,0.48) 0%,transparent 55%),
+    radial-gradient(ellipse at 28% 68%,rgba(45,12,28,0.5) 0%,transparent 55%),
+    repeating-linear-gradient(128deg,transparent 0,transparent 4px,rgba(255,255,255,0.012) 4px,rgba(255,255,255,0.012) 5px),
+    linear-gradient(155deg,#341222 0%,#1e0e18 100%);
 }
-.back-cover::after {
-  content: ""; position: absolute; inset: 4.5%;
-  border: 1px solid rgba(210,170,150,0.22);
-  border-radius: 2px; pointer-events: none; z-index: 2;
-}
-.back-cover .spine-r {
-  position: absolute; top: 0; right: 0; width: 14px; height: 100%;
-  background: linear-gradient(to left, rgba(0,0,0,0.75), rgba(0,0,0,0.08), transparent);
-  z-index: 5; border-radius: 0 10px 10px 0; pointer-events: none;
-}
-.back-cover .bc-cn {
-  position: absolute; width: 20px; height: 20px;
-  border-color: rgba(210,170,150,0.4); border-style: solid; z-index: 4;
-}
-.bc-cn.tl { top: 4%;   left: 4%;   border-width: 1.5px 0 0 1.5px; }
-.bc-cn.tr { top: 4%;   right: 4%;  border-width: 1.5px 1.5px 0 0; }
-.bc-cn.bl { bottom: 4%; left: 4%;  border-width: 0 0 1.5px 1.5px; }
-.bc-cn.br { bottom: 4%; right: 4%; border-width: 0 1.5px 1.5px 0; }
-.bc-body { position: relative; z-index: 3; text-align: center; }
-.bc-quote {
-  font-family: 'Playfair Display', serif; font-style: italic;
-  font-size: clamp(10px, 1.3vw, 15px);
-  color: rgba(245,232,238,0.58); line-height: 1.9; margin-bottom: 16px;
-}
-.bc-rule {
-  width: 28%; height: 1px; margin: 0 auto 14px;
-  background: linear-gradient(to right, transparent, rgba(210,168,185,0.4), transparent);
-}
-.bc-author {
-  font-family: 'EB Garamond', serif; font-style: italic;
-  font-size: clamp(8px, 0.88vw, 11px);
-  letter-spacing: 0.28em; color: #d4a8b8; opacity: 0.45;
-}
+.back-cover-inner::before{content:"";position:absolute;inset:5%;border:1px solid rgba(210,168,185,0.22);pointer-events:none;}
+.back-cover-inner::after{content:"";position:absolute;inset:6.5%;border:1px solid rgba(210,168,185,0.08);pointer-events:none;}
+.bc-body{position:relative;z-index:3;text-align:center;}
+.bc-q{font-family:'Playfair Display',serif;font-style:italic;font-size:clamp(10px,1.28vw,15px);color:rgba(245,232,238,0.56);line-height:1.9;margin-bottom:15px;}
+.bc-rule{width:26%;height:1px;margin:0 auto 12px;background:linear-gradient(to right,transparent,rgba(210,168,185,0.38),transparent);}
+.bc-auth{font-family:'EB Garamond',serif;font-style:italic;font-size:clamp(8px,0.86vw,11px);letter-spacing:0.28em;color:var(--gold-bright);opacity:0.42;}
 
-/* ─────────────────────────────────────────────
+/* ════════════════════════════
    NAVIGATION
-───────────────────────────────────────────── */
-.nav {
-  position: fixed; bottom: 24px; left: 50%;
-  transform: translateX(-50%);
-  z-index: 200;
-  display: flex; align-items: center;
-  background: rgba(18, 8, 14, 0.82);
-  border: 1px solid rgba(210,168,185,0.18);
-  border-radius: 100px;
-  backdrop-filter: blur(22px);
-  -webkit-backdrop-filter: blur(22px);
-  box-shadow: 0 4px 24px rgba(0,0,0,0.55);
-  overflow: hidden;
+════════════════════════════ */
+.nav{
+  position:fixed;bottom:22px;left:50%;transform:translateX(-50%);
+  z-index:500;display:flex;align-items:center;
+  background:rgba(14,6,11,0.84);
+  border:1px solid rgba(210,168,185,0.16);
+  border-radius:100px;
+  backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
+  box-shadow:0 4px 22px rgba(0,0,0,0.55);
+  overflow:hidden;user-select:none;
 }
-.nb {
-  background: none; border: none;
-  color: rgba(210,168,185,0.6); cursor: pointer;
-  padding: 12px 22px; font-size: 15px;
-  transition: color .18s, background .18s;
-  display: flex; align-items: center; justify-content: center;
-  line-height: 1;
+.nb{
+  background:none;border:none;
+  color:rgba(210,168,185,0.58);cursor:pointer;
+  padding:11px 22px;font-size:15px;
+  transition:color .16s,background .16s;
+  line-height:1;display:flex;align-items:center;
 }
-.nb:hover  { color: #d4a8b8; background: rgba(210,168,185,0.07); }
-.nb:active { transform: scale(0.86); }
-.nb.off    { opacity: 0.15; pointer-events: none; }
-.ndiv { width: 1px; height: 16px; background: rgba(210,168,185,0.12); }
-.nlbl {
-  font-family: 'Cormorant Upright', serif; font-weight: 300;
-  font-size: 10px; letter-spacing: 0.22em;
-  color: rgba(210,168,185,0.32);
-  padding: 0 18px; min-width: 68px; text-align: center;
-  user-select: none;
+.nb:hover{color:#d4a8b8;background:rgba(210,168,185,0.07);}
+.nb:active{transform:scale(0.84);}
+.nb.off{opacity:0.14;pointer-events:none;}
+.ndiv{width:1px;height:15px;background:rgba(210,168,185,0.11);}
+.nlbl{
+  font-family:'Cormorant Upright',serif;font-weight:300;
+  font-size:10px;letter-spacing:0.22em;
+  color:rgba(210,168,185,0.3);
+  padding:0 17px;min-width:66px;text-align:center;
 }
-.keyhint {
-  position: fixed; bottom: 70px; left: 50%;
-  transform: translateX(-50%);
-  font-family: 'Cormorant Upright', serif; font-size: 9px;
-  letter-spacing: 0.22em; text-transform: uppercase;
-  color: rgba(210,168,185,0.15); white-space: nowrap;
-  z-index: 200; pointer-events: none;
-  animation: kfade 6s ease 2.8s both;
+.khint{
+  position:fixed;bottom:68px;left:50%;transform:translateX(-50%);
+  font-family:'Cormorant Upright',serif;font-size:9px;letter-spacing:0.22em;
+  text-transform:uppercase;color:rgba(210,168,185,0.15);
+  white-space:nowrap;z-index:500;pointer-events:none;
+  animation:kfa 6s ease 3s both;
 }
-@keyframes kfade { 0%{opacity:0} 15%{opacity:1} 75%{opacity:1} 100%{opacity:0} }
-@media (max-width:640px) { .keyhint { display: none; } }
-
+@keyframes kfa{0%{opacity:0}14%{opacity:1}76%{opacity:1}100%{opacity:0}}
+@media(max-width:600px){.khint{display:none;}}
 </style>
 </head>
 <body>
-
 <div class="bg"></div>
-
 <div class="scene">
-  <div class="book-wrap">
-    <div class="book-shadow"></div>
-    <div id="flipbook"></div>
+  <div class="book-container" id="bookContainer">
+    <div class="book" id="book">
+      <div class="book-shadow"></div>
+      <!-- pages rendered by JS -->
+    </div>
   </div>
 </div>
 
 <div class="nav" id="nav">
-  <button class="nb off" id="btnPrev" onclick="prevPage()">&#8592;</button>
+  <button class="nb off" id="btnPrev" onclick="go(-1)">&#8592;</button>
   <div class="ndiv"></div>
   <span class="nlbl" id="nlbl">&nbsp;</span>
   <div class="ndiv"></div>
-  <button class="nb" id="btnNext" onclick="nextPage()">&#8594;</button>
+  <button class="nb" id="btnNext" onclick="go(1)">&#8594;</button>
 </div>
-<p class="keyhint">← → arrow keys to turn pages</p>
+<p class="khint">← → arrow keys</p>
 
-<script src="jquery.js"></script>
-<script src="turn.js"></script>
 <script>
-/* ═══════════════════════════════════════════════════════
-   CONFIG  ✏️  Edit these to customise the book
-═══════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════
+   CONFIG  ✏️
+══════════════════════════════════════════════════ */
 var CFG = {
-  title:      "Verses",
-  subtitle:   "a poetry collection",
-  author:     "Your Name",
-  cover:      "images/cover.jpg",
-  dedication: "In her words, I found a country<br>I did not know I was homesick for.",
-  dedAttr:    "— for you, always",
-  backQuote:  "She is a poem herself —<br>the kind that changes meaning<br>each time you read it."
+  title:     "Verses",
+  subtitle:  "a poetry collection",
+  author:    "Your Name",
+  /* ✏️  COVER IMAGE — put your image file next to index.html
+         then change this to its filename, e.g. "my-cover.jpg"
+         Leave empty ("") to show no image on the cover.        */
+  cover:     "",
+  dedication:"In her words, I found a country<br>I did not know I was homesick for.",
+  dedAttr:   "— for you, always",
+  backQuote: "She is a poem herself —<br>the kind that changes meaning<br>each time you read it."
 };
 
-/* ═══════════════════════════════════════════════════════
-   POEMS  ✏️  Replace with real poems
-   Each poem: { title: "...", lines: ["line", "", "stanza break = empty string"] }
-
-   TO ADD MORE: copy a { } block, paste inside the array, separate with a comma.
-═══════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════
+   POEMS  ✏️
+   Each poem: { title:"...", lines:["line","","stanza break = empty string"] }
+   To add a poem: copy one block, paste inside the array, add comma above it.
+══════════════════════════════════════════════════ */
 var POEMS = [
+  /* ── Add your poems here ── */
+  /* Example format (delete this when you add real ones):
   {
-    title: "Morning Light",
+    title: "Your Poem Title",
     lines: [
-      "The sun does not ask permission",
-      "before it floods the room —",
-      "it simply arrives, as you do,",
-      "quiet and warm and certain.",
+      "First line of the poem,",
+      "second line here.",
       "",
-      "I have learned to wake early",
-      "just to watch the way light",
-      "finds the things I love first.",
-      "",
-      "It always finds you first."
+      "New stanza starts after the blank line.",
+      "Keep going as long as needed."
     ]
   },
-  {
-    title: "What I Kept",
-    lines: [
-      "There are things I never said",
-      "that I keep folded in my chest",
-      "like letters I wrote at 2 a.m.",
-      "and was too afraid to send.",
-      "",
-      "But I kept them.",
-      "I keep everything of you."
-    ]
-  },
-  {
-    title: "The Ordinary Hours",
-    lines: [
-      "It is not the grand gestures",
-      "that undo me —",
-      "it is the Tuesday afternoons,",
-      "the half-drunk cup of tea,",
-      "the way you laugh at your own jokes",
-      "before you finish telling them.",
-      "",
-      "It is the ordinary hours",
-      "that I would choose again and again."
-    ]
-  },
-  {
-    title: "Distance",
-    lines: [
-      "Some nights the sky feels close enough",
-      "to fold and put inside a pocket.",
-      "",
-      "Some nights it does not.",
-      "",
-      "Either way, I am still here,",
-      "standing under the same stars,",
-      "counting the ones that remind me of you."
-    ]
-  },
-  {
-    title: "Small Graces",
-    lines: [
-      "Thank you for the window you opened",
-      "when I had forgotten there were windows.",
-      "",
-      "Thank you for the word you said",
-      "when I had run out of words.",
-      "",
-      "Thank you for staying in the room",
-      "when I made it hard to stay.",
-      "",
-      "These are the things I will remember",
-      "when I am old and the rest has gone soft —",
-      "your small graces,",
-      "which were never small at all."
-    ]
-  },
-  {
-    title: "Cartography",
-    lines: [
-      "I have been mapping you",
-      "the way explorers mapped coastlines —",
-      "imprecisely, devotedly,",
-      "always finding new edges.",
-      "",
-      "There is the country of your laugh.",
-      "There is the province of your silences.",
-      "There is the small, unnamed bay",
-      "where you rest your chin when you are thinking.",
-      "",
-      "I would spend a lifetime",
-      "making this map wrong."
-    ]
-  },
-  {
-    title: "After the Rain",
-    lines: [
-      "Everything smells like beginning.",
-      "",
-      "The garden does not know",
-      "how long it waited —",
-      "it only knows the rain is here now,",
-      "and opens.",
-      "",
-      "I think of you.",
-      "I think of how I open."
-    ]
-  },
-  {
-    title: "Still Life With You",
-    lines: [
-      "Two cups.",
-      "One window.",
-      "The particular blue of late afternoon",
-      "that only exists in October.",
-      "",
-      "You, reading.",
-      "Me, watching you read",
-      "and pretending not to.",
-      "",
-      "If I could paint, I would paint this.",
-      "I would call it: enough.",
-      "I would call it: more than."
-    ]
-  },
-  {
-    title: "Instructions for Loving You",
-    lines: [
-      "Do not hurry.",
-      "",
-      "Arrive the way water arrives —",
-      "finding every low place,",
-      "filling without forcing,",
-      "patient with the stone.",
-      "",
-      "Bring your whole self.",
-      "Leave room for mine.",
-      "",
-      "Do not hurry.",
-      "There is no one else I am waiting for."
-    ]
-  },
-  {
-    title: "The Long Way",
-    lines: [
-      "We could have taken the short road.",
-      "We did not.",
-      "",
-      "We took the one with the broken fence",
-      "and the field that smelled like clover",
-      "and the detour through the town",
-      "where nothing was happening",
-      "except everything.",
-      "",
-      "I am glad we took the long way.",
-      "I am glad it was with you."
-    ]
-  }
+  */
 ];
 
-/* ═══════════════════════════════════════════════════════
-   HELPERS
-═══════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════
+   ENGINE
+══════════════════════════════════════════════════ */
+var PAGES = [];   // array of DOM nodes, one per half-page
+var cur   = 0;    // current spread index (0 = cover spread)
+var busy  = false;
+var DUR   = 700;  // ms, matches --dur in CSS
+
+/* ── Roman numerals ── */
 function roman(n){
   var v=[1000,900,500,400,100,90,50,40,10,9,5,4,1];
   var s=["M","CM","D","CD","C","XC","L","XL","X","IX","V","IV","I"];
   var r=""; for(var i=0;i<v.length;i++) while(n>=v[i]){r+=s[i];n-=v[i];} return r;
 }
 function esc(s){
-  return String(s)
-    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
 
-/* ═══════════════════════════════════════════════════════
-   PAGE BUILDERS
-═══════════════════════════════════════════════════════ */
-function frontCover(){
-  return '<div class="hard front-cover">'
-    +'<div class="spine"></div>'
-    +'<div class="inner-frame"></div>'
-    +'<div class="cn tl"></div><div class="cn tr"></div>'
-    +'<div class="cn bl"></div><div class="cn br"></div>'
-    +'<div class="fc-body">'
-    +  '<div class="cov-img-wrap">'
-    +    '<img src="'+CFG.cover+'" alt="" onerror="this.style.display=\'none\'"/>'
-    +    '<div class="fallback">'
-    +      '<svg width="100" height="130" viewBox="0 0 100 130" fill="none">'
-    +        '<rect x="6" y="6" width="88" height="118" rx="1" stroke="#d4a8b8" stroke-width="0.5"/>'
-    +        '<line x1="18" y1="32" x2="82" y2="32" stroke="#d4a8b8" stroke-width="0.4"/>'
-    +        '<line x1="18" y1="44" x2="82" y2="44" stroke="#d4a8b8" stroke-width="0.4"/>'
-    +        '<line x1="18" y1="56" x2="65" y2="56" stroke="#d4a8b8" stroke-width="0.4"/>'
-    +        '<line x1="18" y1="76" x2="82" y2="76" stroke="#d4a8b8" stroke-width="0.4"/>'
-    +        '<line x1="18" y1="88" x2="72" y2="88" stroke="#d4a8b8" stroke-width="0.4"/>'
-    +        '<line x1="18" y1="100" x2="60" y2="100" stroke="#d4a8b8" stroke-width="0.4"/>'
-    +        '<circle cx="50" cy="20" r="8" stroke="#d4a8b8" stroke-width="0.4"/>'
-    +      '</svg>'
-    +    '</div>'
-    +  '</div>'
-    +  '<p class="cov-eyebrow">A Collection of Poems</p>'
-    +  '<h1 class="cov-title">'+esc(CFG.title)+'</h1>'
-    +  '<div class="cov-rule"></div>'
-    +  '<p class="cov-author">'+esc(CFG.author)+'</p>'
-    +'</div>'
-    +'</div>';
+/* ─────────── PAGE CONTENT BUILDERS ─────────── */
+function makeFrontCoverLeft(){
+  var d = document.createElement('div');
+  d.className = 'pg pg-cover-left';
+  d.innerHTML =
+    '<div class="cover-inner">'
+   +'<div class="spine-shadow"></div>'
+   +'<div class="cn tl"></div><div class="cn tr"></div>'
+   +'<div class="cn bl"></div><div class="cn br"></div>'
+   +'<div class="cov-img-box">'
+   +  (CFG.cover
+       ? '<img src="'+esc(CFG.cover)+'" alt=""/>'
+       : '<div class="no-img"><svg width="90" height="118" viewBox="0 0 90 118" fill="none">'
+         +'<rect x="5" y="5" width="80" height="108" rx="1" stroke="#d4a8b8" stroke-width="0.5"/>'
+         +'<line x1="16" y1="28" x2="74" y2="28" stroke="#d4a8b8" stroke-width="0.4"/>'
+         +'<line x1="16" y1="40" x2="74" y2="40" stroke="#d4a8b8" stroke-width="0.4"/>'
+         +'<line x1="16" y1="52" x2="58" y2="52" stroke="#d4a8b8" stroke-width="0.4"/>'
+         +'<line x1="16" y1="68" x2="74" y2="68" stroke="#d4a8b8" stroke-width="0.4"/>'
+         +'<line x1="16" y1="80" x2="65" y2="80" stroke="#d4a8b8" stroke-width="0.4"/>'
+         +'<line x1="16" y1="92" x2="55" y2="92" stroke="#d4a8b8" stroke-width="0.4"/>'
+         +'</svg></div>')
+   +'</div>'
+   +'<div class="cov-texts">'
+   +'<p class="cov-eye">A Collection of Poems</p>'
+   +'<h1 class="cov-ttl">'+esc(CFG.title)+'</h1>'
+   +'<div class="cov-rule"></div>'
+   +'<p class="cov-auth">'+esc(CFG.author)+'</p>'
+   +'</div>'
+   +'</div>';
+  return d;
 }
 
-function backOfFront(){
-  return '<div class="hard inner-dark"><span>'+esc(CFG.title)+' &nbsp;·&nbsp; A Poetry Collection</span></div>';
+function makeFrontCoverRight(){
+  // back-of-front-cover (dark right side when book is closed)
+  var d = document.createElement('div');
+  d.className = 'pg pg-cover-right';
+  d.innerHTML = '<div class="inner-dark" style="border-radius:0 var(--r) var(--r) 0"><span>'+esc(CFG.title)+' · A Poetry Collection</span></div>';
+  return d;
 }
 
-function titlePage(){
-  return '<div class="page paper title-page">'
-    +'<div class="tp-line" style="height:clamp(20px,3.8vh,40px);margin-bottom:16px"></div>'
-    +'<p class="tp-eye">A Collection of Poems</p>'
-    +'<h1 class="tp-title">'+esc(CFG.title)+'</h1>'
-    +'<p class="tp-sub">'+esc(CFG.subtitle)+'</p>'
-    +'<div class="tp-rule"></div>'
-    +'<p class="tp-author">'+esc(CFG.author)+'</p>'
-    +'<div class="tp-line bot" style="height:clamp(20px,3.8vh,40px);margin-top:16px"></div>'
-    +'</div>';
+function makeTitlePage(){
+  var d = document.createElement('div');
+  d.className = 'pg pg-paper';
+  d.innerHTML =
+    '<div class="paper-inner">'
+   +'<div class="tp">'
+   +'<div class="tp-vl" style="height:clamp(20px,3.6vh,38px)"></div>'
+   +'<span class="tp-eye">A Collection of Poems</span>'
+   +'<span class="tp-ttl">'+esc(CFG.title)+'</span>'
+   +'<span class="tp-sub">'+esc(CFG.subtitle)+'</span>'
+   +'<div class="tp-rule"></div>'
+   +'<span class="tp-auth">'+esc(CFG.author)+'</span>'
+   +'<div class="tp-vlb" style="height:clamp(20px,3.6vh,38px)"></div>'
+   +'</div></div>';
+  return d;
 }
 
-function dedPage(){
-  return '<div class="page paper ded-page">'
-    +'<p class="ded-q">'+CFG.dedication+'</p>'
-    +'<p class="ded-attr">'+esc(CFG.dedAttr)+'</p>'
-    +'</div>';
+function makeDedPage(){
+  var d = document.createElement('div');
+  d.className = 'pg pg-paper';
+  d.innerHTML =
+    '<div class="paper-inner">'
+   +'<div class="ded">'
+   +'<p class="ded-q">'+CFG.dedication+'</p>'
+   +'<p class="ded-at">'+esc(CFG.dedAttr)+'</p>'
+   +'</div></div>';
+  return d;
 }
 
-function poemPage(poem, idx){
+function makeBlankPage(){
+  var d = document.createElement('div');
+  d.className = 'pg pg-paper';
+  d.innerHTML = '<div class="paper-inner"></div>';
+  return d;
+}
+
+function makePoemPage(poem, idx){
   var lines = poem.lines.map(function(l){
     return '<p>'+(l.trim()==='' ? '' : esc(l))+'</p>';
   }).join('');
-  return '<div class="page paper poem-page">'
-    +'<div class="poem-inner">'
-    +  '<p class="poem-roman">'+roman(idx)+'</p>'
-    +  '<h2 class="poem-title">'+esc(poem.title)+'</h2>'
-    +  '<p class="poem-orn">&#10022; &#10022; &#10022;</p>'
-    +  '<div class="poem-body">'+lines+'</div>'
-    +'</div>'
-    +'<p class="pgnum">'+idx+'</p>'
-    +'</div>';
+  var d = document.createElement('div');
+  d.className = 'pg pg-paper';
+  d.innerHTML =
+    '<div class="paper-inner">'
+   +'<div class="poem">'
+   +'<div class="poem-inner">'
+   +'<p class="p-roman">'+roman(idx)+'</p>'
+   +'<h2 class="p-title">'+esc(poem.title)+'</h2>'
+   +'<p class="p-orn">&#10022; &#10022; &#10022;</p>'
+   +'<div class="p-body">'+lines+'</div>'
+   +'</div>'
+   +'<p class="p-num">'+idx+'</p>'
+   +'</div></div>';
+  return d;
 }
 
-function frontOfBack(){
-  return '<div class="hard inner-dark" style="align-items:flex-start;justify-content:flex-start;"><span>'+esc(CFG.title)+' &nbsp;·&nbsp; A Poetry Collection</span></div>';
+function makeBackCoverLeft(){
+  // front-of-back-cover (dark inner left side)
+  var d = document.createElement('div');
+  d.className = 'pg pg-cover-left';
+  d.innerHTML = '<div class="inner-dark" style="border-radius:var(--r) 0 0 var(--r)"><span>'+esc(CFG.title)+' · A Poetry Collection</span></div>';
+  return d;
 }
 
-function backCover(){
-  return '<div class="hard back-cover">'
-    +'<div class="spine-r"></div>'
-    +'<div class="bc-cn tl"></div><div class="bc-cn tr"></div>'
-    +'<div class="bc-cn bl"></div><div class="bc-cn br"></div>'
-    +'<div class="bc-body">'
-    +  '<p class="bc-quote">'+CFG.backQuote+'</p>'
-    +  '<div class="bc-rule"></div>'
-    +  '<p class="bc-author">'+esc(CFG.author)+'</p>'
-    +'</div>'
-    +'</div>';
+function makeBackCoverRight(){
+  var d = document.createElement('div');
+  d.className = 'pg pg-cover-right';
+  d.innerHTML =
+    '<div class="back-cover-inner">'
+   +'<div class="cn tl"></div><div class="cn tr"></div>'
+   +'<div class="cn bl"></div><div class="cn br"></div>'
+   +'<div class="spine-shadow-r"></div>'
+   +'<div class="bc-body">'
+   +'<p class="bc-q">'+CFG.backQuote+'</p>'
+   +'<div class="bc-rule"></div>'
+   +'<p class="bc-auth">'+esc(CFG.author)+'</p>'
+   +'</div></div>';
+  return d;
 }
 
-/* ═══════════════════════════════════════════════════════
-   BUILD & INIT
-═══════════════════════════════════════════════════════ */
-function build(){
-  var html = frontCover() + backOfFront() + titlePage() + dedPage();
-  POEMS.forEach(function(p,i){ html += poemPage(p, i+1); });
-  html += frontOfBack() + backCover();
-  document.getElementById('flipbook').innerHTML = html;
-}
+/* ─────────── BUILD PAGE LIST ─────────── */
+function buildPages(){
+  PAGES = [];
 
-function init(){
-  var W = window.innerWidth, H = window.innerHeight;
-  var mob = W < 680;
+  // Always: front cover L + R
+  PAGES.push(makeFrontCoverLeft());
+  PAGES.push(makeFrontCoverRight());
 
-  var pH, pW;
-  if(mob){
-    pH = Math.min(H * 0.74, 560);
-    pW = pH / 1.414;
-    if(pW > W * 0.88){ pW = W * 0.88; pH = pW * 1.414; }
+  // Title page + dedication (4 slots = 2 spreads)
+  PAGES.push(makeTitlePage());
+  PAGES.push(makeDedPage());
+
+  // Poems — pad to even count so spreads work
+  var poemPages = [];
+  if(POEMS.length === 0){
+    // No poems yet — show a placeholder spread
+    var ph = document.createElement('div');
+    ph.className = 'pg pg-paper';
+    ph.innerHTML =
+      '<div class="paper-inner">'
+     +'<div class="poem">'
+     +'<div class="poem-inner">'
+     +'<p class="p-roman" style="opacity:0.25">&#x2661;</p>'
+     +'<h2 class="p-title" style="opacity:0.35">No poems yet</h2>'
+     +'<p class="p-orn" style="opacity:0.15">&#10022; &#10022; &#10022;</p>'
+     +'<div class="p-body" style="opacity:0.3">'
+     +'<p>Add poems to the POEMS array</p>'
+     +'<p>in index.html to fill this book.</p>'
+     +'</div></div></div></div>';
+    poemPages.push(ph);
   } else {
-    pH = Math.min(H * 0.78, 620);
-    pW = pH / 1.414;
-    if(pW * 2 > W * 0.84){ pW = (W * 0.84) / 2; pH = pW * 1.414; }
+    POEMS.forEach(function(p,i){ poemPages.push(makePoemPage(p,i+1)); });
   }
+  // pad to even
+  if(poemPages.length % 2 !== 0) poemPages.push(makeBlankPage());
+  poemPages.forEach(function(p){ PAGES.push(p); });
 
-  var bW = mob ? pW : pW * 2;
+  // Back cover L + R
+  PAGES.push(makeBackCoverLeft());
+  PAGES.push(makeBackCoverRight());
 
-  /* Destroy previous instance if any */
-  if($('#flipbook').data().tpage !== undefined){
-    try{ $('#flipbook').turn('destroy'); } catch(e){}
+  // Total must be even
+  if(PAGES.length % 2 !== 0) PAGES.splice(PAGES.length-2, 0, makeBlankPage());
+}
+
+/* ─────────── LAYOUT ─────────── */
+var PW, PH; // page width, height
+
+function calcSize(){
+  var W = window.innerWidth, H = window.innerHeight;
+  PH = Math.min(H * 0.76, 620);
+  PW = PH / 1.414;
+  // on mobile show single page
+  if(W < 680){
+    PW = Math.min(W * 0.88, PW);
+    PH = PW * 1.414;
+  } else {
+    if(PW * 2 > W * 0.84){ PW = (W * 0.84)/2; PH = PW*1.414; }
   }
+  PW = Math.round(PW); PH = Math.round(PH);
+}
 
-  $('#flipbook').turn({
-    width:        Math.round(bW),
-    height:       Math.round(pH),
-    autoCenter:   true,
-    display:      mob ? 'single' : 'double',
-    acceleration: true,
-    gradients:    true,
-    elevation:    50,
-    duration:     780,
-    when: {
-      turning: function(e,p){ updateNav(p); },
-      turned:  function(e,p){ updateNav(p); }
-    }
+var isMobile = false;
+
+function applySize(){
+  isMobile = window.innerWidth < 680;
+  var book = document.getElementById('book');
+  var bW = isMobile ? PW : PW*2;
+  book.style.width  = bW+'px';
+  book.style.height = PH+'px';
+  // size all pages
+  PAGES.forEach(function(p){
+    p.style.width  = PW+'px';
+    p.style.height = PH+'px';
+  });
+  document.documentElement.style.setProperty('--dur', DUR+'ms');
+}
+
+/* ─────────── RENDER SPREAD ─────────── */
+// A "spread" = two facing pages. Index 0 = pages 0+1, index 1 = pages 2+3, etc.
+// On mobile we show one page at a time (spread index still, but only right page visible)
+
+function getSpreadCount(){ return Math.floor(PAGES.length / 2); }
+
+function renderSpread(spreadIdx){
+  var book = document.getElementById('book');
+  // Remove all existing spread children (keep .book-shadow)
+  Array.from(book.children).forEach(function(c){
+    if(!c.classList.contains('book-shadow')) book.removeChild(c);
   });
 
-  updateNav(1);
+  var L = PAGES[spreadIdx*2];
+  var R = PAGES[spreadIdx*2+1];
 
-  /* Keyboard */
-  $(document).off('keydown.book').on('keydown.book', function(e){
-    if(e.keyCode===37) prevPage();
-    if(e.keyCode===39) nextPage();
+  if(isMobile){
+    // Show only right page on mobile (it's the "current" page feel)
+    var wrap = document.createElement('div');
+    wrap.style.cssText = 'display:flex;width:100%;height:100%;';
+    // on first spread show left (cover), else show right
+    var pg = (spreadIdx === 0) ? L : R;
+    pg.style.width  = PW+'px';
+    pg.style.height = PH+'px';
+    // round both sides on mobile
+    pg.style.borderRadius = '10px';
+    wrap.appendChild(pg);
+    book.appendChild(wrap);
+  } else {
+    var wrap = document.createElement('div');
+    wrap.style.cssText = 'display:flex;width:100%;height:100%;';
+    wrap.appendChild(L);
+    wrap.appendChild(R);
+    book.appendChild(wrap);
+  }
+}
+
+/* ─────────── 3D FLIP ANIMATION ─────────── */
+function animateFlip(direction, callback){
+  // direction: +1 = forward (flip right to left), -1 = backward
+  var book = document.getElementById('book');
+
+  // Pages leaving and arriving
+  var fromSpread = cur;
+  var toSpread   = cur + direction;
+
+  var fromL = PAGES[fromSpread*2],   fromR = PAGES[fromSpread*2+1];
+  var toL   = PAGES[toSpread*2],     toR   = PAGES[toSpread*2+1];
+
+  // Ensure size
+  [fromL,fromR,toL,toR].forEach(function(p){
+    p.style.width=PW+'px'; p.style.height=PH+'px';
   });
 
-  /* Touch swipe */
+  // Clear book
+  Array.from(book.children).forEach(function(c){
+    if(!c.classList.contains('book-shadow')) book.removeChild(c);
+  });
+
+  if(isMobile){
+    // Mobile: simple slide cross-fade instead of 3D flip
+    var fromPg = (fromSpread===0) ? fromL : fromR;
+    var toPg   = (toSpread===0)   ? toL   : toR;
+    fromPg.style.borderRadius='10px'; toPg.style.borderRadius='10px';
+
+    var stage = document.createElement('div');
+    stage.style.cssText='position:relative;width:'+PW+'px;height:'+PH+'px;overflow:hidden;border-radius:10px;';
+
+    fromPg.style.cssText += ';position:absolute;top:0;left:0;transition:none;';
+    toPg.style.cssText   += ';position:absolute;top:0;left:0;'
+      +'transform:translateX('+(direction>0?'100%':'-100%')+');transition:none;';
+
+    stage.appendChild(fromPg);
+    stage.appendChild(toPg);
+    book.appendChild(stage);
+
+    requestAnimationFrame(function(){requestAnimationFrame(function(){
+      fromPg.style.cssText += ';transition:transform '+DUR+'ms cubic-bezier(0.77,0,0.175,1);'
+                            + 'transform:translateX('+(direction>0?'-100%':'100%')+');';
+      toPg.style.cssText   += ';transition:transform '+DUR+'ms cubic-bezier(0.77,0,0.175,1);'
+                            + 'transform:translateX(0);';
+      setTimeout(function(){
+        fromPg.style.cssText='width:'+PW+'px;height:'+PH+'px;border-radius:10px;';
+        toPg.style.cssText  ='width:'+PW+'px;height:'+PH+'px;border-radius:10px;';
+        callback();
+      }, DUR+20);
+    });});
+    return;
+  }
+
+  /* ── DESKTOP 3D flip ── */
+  // Stage: full spread width
+  var stage = document.createElement('div');
+  stage.style.cssText = 'position:relative;width:'+(PW*2)+'px;height:'+PH+'px;';
+
+  // Back layer: the destination spread (sits behind during flip)
+  var backLayer = document.createElement('div');
+  backLayer.style.cssText = 'position:absolute;inset:0;display:flex;';
+  backLayer.appendChild(toL);
+  backLayer.appendChild(toR);
+  stage.appendChild(backLayer);
+
+  // Front layer: the departing spread (sits on top, then flips away)
+  var frontLayer = document.createElement('div');
+  frontLayer.style.cssText = 'position:absolute;inset:0;display:flex;z-index:2;';
+  frontLayer.appendChild(fromL);
+  frontLayer.appendChild(fromR);
+  stage.appendChild(frontLayer);
+
+  // The flip card — covers exactly ONE page half
+  var card = document.createElement('div');
+  if(direction > 0){
+    // Forward: right page flips over to reveal new left
+    card.style.cssText =
+      'position:absolute;top:0;left:'+PW+'px;width:'+PW+'px;height:'+PH+'px;'
+     +'transform-origin:left center;'
+     +'transform-style:preserve-3d;-webkit-transform-style:preserve-3d;'
+     +'z-index:10;'
+     +'perspective:'+PW*3+'px;-webkit-perspective:'+PW*3+'px;';
+  } else {
+    // Backward: left page flips over to reveal old right
+    card.style.cssText =
+      'position:absolute;top:0;left:0;width:'+PW+'px;height:'+PH+'px;'
+     +'transform-origin:right center;'
+     +'transform-style:preserve-3d;-webkit-transform-style:preserve-3d;'
+     +'z-index:10;'
+     +'perspective:'+PW*3+'px;-webkit-perspective:'+PW*3+'px;';
+  }
+
+  // Front face of flip card
+  var fFront = document.createElement('div');
+  fFront.style.cssText =
+    'position:absolute;inset:0;overflow:hidden;'
+   +'backface-visibility:hidden;-webkit-backface-visibility:hidden;';
+
+  // Back face of flip card (shows after flip)
+  var fBack = document.createElement('div');
+  fBack.style.cssText =
+    'position:absolute;inset:0;overflow:hidden;'
+   +'backface-visibility:hidden;-webkit-backface-visibility:hidden;'
+   +'transform:rotateY(180deg);-webkit-transform:rotateY(180deg);';
+
+  if(direction > 0){
+    // Front face = current right page; back face = new left page
+    fFront.appendChild(PAGES[fromSpread*2+1].cloneNode(true));
+    fBack.appendChild(toL.cloneNode(true));
+  } else {
+    // Front face = current left page; back face = new right page
+    fFront.appendChild(PAGES[fromSpread*2].cloneNode(true));
+    fBack.appendChild(toR.cloneNode(true));
+  }
+
+  // Clone sizing
+  [fFront,fBack].forEach(function(f){
+    var pg = f.firstChild;
+    if(pg){ pg.style.width=PW+'px'; pg.style.height=PH+'px'; }
+  });
+
+  // Fold shadow
+  var fold = document.createElement('div');
+  fold.style.cssText =
+    'position:absolute;inset:0;z-index:3;pointer-events:none;opacity:0;'
+   +'transition:opacity '+(DUR/2)+'ms ease;'
+   +(direction>0
+      ? 'background:linear-gradient(to right,rgba(0,0,0,0.22) 0%,rgba(0,0,0,0.04) 60%,transparent 100%);'
+      : 'background:linear-gradient(to left,rgba(0,0,0,0.22) 0%,rgba(0,0,0,0.04) 60%,transparent 100%);');
+
+  card.appendChild(fFront);
+  card.appendChild(fBack);
+  card.appendChild(fold);
+  stage.appendChild(card);
+
+  book.appendChild(stage);
+
+  // Set initial card rotation (already at 0, no transition yet)
+  card.style.transform = 'rotateY(0deg)';
+  card.style.transition = 'none';
+
+  requestAnimationFrame(function(){
+    requestAnimationFrame(function(){
+      // Start animation
+      var targetRot = direction > 0 ? -180 : 180;
+      card.style.transition = 'transform '+DUR+'ms cubic-bezier(0.645,0.045,0.355,1.000)';
+      card.style.webkitTransition = 'transform '+DUR+'ms cubic-bezier(0.645,0.045,0.355,1.000)';
+      card.style.transform = 'rotateY('+targetRot+'deg)';
+      card.style.webkitTransform = 'rotateY('+targetRot+'deg)';
+      fold.style.opacity = '1';
+
+      setTimeout(function(){
+        fold.style.opacity='0';
+        setTimeout(function(){
+          // Clean up and render final state
+          [fromL,fromR,toL,toR].forEach(function(p){
+            p.style.cssText='width:'+PW+'px;height:'+PH+'px;';
+          });
+          callback();
+        }, 60);
+      }, DUR - DUR*0.35);
+    });
+  });
+}
+
+/* ─────────── NAVIGATION ─────────── */
+function go(dir){
+  if(busy) return;
+  var total = getSpreadCount();
+  var next  = cur + dir;
+  if(next < 0 || next >= total) return;
+  busy = true;
+
+  animateFlip(dir, function(){
+    cur = next;
+    renderSpread(cur);
+    updateNav();
+    busy = false;
+  });
+}
+
+function updateNav(){
+  var total = getSpreadCount();
+  document.getElementById('nlbl').textContent = (cur+1)+' / '+total;
+  document.getElementById('btnPrev').classList.toggle('off', cur===0);
+  document.getElementById('btnNext').classList.toggle('off', cur===total-1);
+}
+
+/* ─────────── INIT ─────────── */
+function init(){
+  calcSize();
+  buildPages();
+  applySize();
+  renderSpread(0);
+  updateNav();
+
+  // Keyboard
+  document.addEventListener('keydown', function(e){
+    if(e.keyCode===37) go(-1);
+    if(e.keyCode===39) go(1);
+  });
+
+  // Touch swipe
   var tx=0, ty=0;
-  var el = document.getElementById('flipbook');
-  el.removeEventListener('touchstart', el._ts);
-  el.removeEventListener('touchend',   el._te);
-  el._ts = function(e){ tx=e.touches[0].clientX; ty=e.touches[0].clientY; };
-  el._te = function(e){
+  var sc = document.getElementById('bookContainer');
+  sc.addEventListener('touchstart',function(e){tx=e.touches[0].clientX;ty=e.touches[0].clientY;},{passive:true});
+  sc.addEventListener('touchend',function(e){
     var dx=e.changedTouches[0].clientX-tx, dy=e.changedTouches[0].clientY-ty;
-    if(Math.abs(dx)>Math.abs(dy) && Math.abs(dx)>42){ dx<0?nextPage():prevPage(); }
-  };
-  el.addEventListener('touchstart', el._ts, {passive:true});
-  el.addEventListener('touchend',   el._te, {passive:true});
+    if(Math.abs(dx)>Math.abs(dy) && Math.abs(dx)>38){ go(dx<0?1:-1); }
+  },{passive:true});
+
+  // Resize
+  window.addEventListener('resize', function(){
+    calcSize(); applySize(); renderSpread(cur); updateNav();
+  });
 }
 
-function prevPage(){ $('#flipbook').turn('previous'); }
-function nextPage(){ $('#flipbook').turn('next'); }
-function updateNav(p){
-  var t=$('#flipbook').turn('pages');
-  $('#nlbl').text(p+' / '+t);
-  $('#btnPrev').toggleClass('off', p<=1);
-  $('#btnNext').toggleClass('off', p>=t);
-}
-
-/* ─── Start ─── */
-$(function(){
-  build();
-  init();
-});
+document.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
 </html>
