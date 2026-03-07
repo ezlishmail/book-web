@@ -1,0 +1,10 @@
+Poem Title One
+
+Replace this with your first poem's lines,
+each line lives on its own row.
+
+Leave a blank line for a stanza break,
+and let the silence breathe between.
+
+This is a second stanza now,
+as many lines as the poem needs.
