@@ -1,667 +1,460 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=DM+Serif+Display:ital@0;1&family=Lato:wght@300;400&display=swap" rel="stylesheet">
-  <title>Poems — A Collection</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=EB+Garamond:ital,wght@0,400;1,400;1,500&family=Cormorant+Upright:wght@300;400&display=swap" rel="stylesheet">
+<title>Verses — A Poetry Collection</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{
+  width:100%;height:100%;overflow:hidden;
+  background:#100b06;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'EB Garamond',Georgia,serif;
+}
+body::before{
+  content:"";position:fixed;inset:0;z-index:0;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%,rgba(180,120,50,0.07) 0%,transparent 100%),
+    radial-gradient(ellipse 60% 80% at 20% 80%,rgba(80,40,10,0.4) 0%,transparent 60%),
+    radial-gradient(ellipse 60% 80% at 80% 20%,rgba(60,30,8,0.4) 0%,transparent 60%),
+    repeating-linear-gradient(88deg,transparent 0px,transparent 6px,rgba(255,255,255,0.006) 6px,rgba(255,255,255,0.006) 7px),
+    linear-gradient(170deg,#1e1208 0%,#0d0804 55%,#181005 100%);
+}
+body::after{
+  content:"";position:fixed;top:-100px;left:50%;transform:translateX(-50%);
+  width:900px;height:600px;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse,rgba(200,160,80,0.06) 0%,transparent 60%);
+}
 
+/* ── Loading screen ── */
+#loading{
+  position:fixed;inset:0;z-index:1000;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:#100b06;gap:18px;
+  transition:opacity 0.6s ease;
+}
+#loading.hide{opacity:0;pointer-events:none;}
+.loading-title{
+  font-family:'Playfair Display',serif;font-style:italic;
+  font-size:clamp(20px,3vw,32px);color:rgba(200,168,108,0.7);
+}
+.loading-dots{display:flex;gap:8px;}
+.dot{
+  width:6px;height:6px;border-radius:50%;
+  background:rgba(200,168,108,0.4);
+  animation:dotPulse 1.2s ease-in-out infinite;
+}
+.dot:nth-child(2){animation-delay:0.2s;}
+.dot:nth-child(3){animation-delay:0.4s;}
+@keyframes dotPulse{
+  0%,100%{transform:scale(1);opacity:0.3;}
+  50%{transform:scale(1.4);opacity:1;}
+}
+
+/* ── Error screen ── */
+#error-screen{
+  position:fixed;inset:0;z-index:999;
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+  background:#100b06;padding:40px;text-align:center;gap:16px;
+}
+.err-title{font-family:'Playfair Display',serif;font-style:italic;font-size:24px;color:rgba(200,168,108,0.8);}
+.err-msg{font-family:'EB Garamond',serif;font-size:15px;color:rgba(200,168,108,0.4);line-height:1.7;max-width:420px;}
+.err-code{font-family:monospace;font-size:12px;color:rgba(200,168,108,0.25);margin-top:8px;}
+
+.scene{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;width:100vw;height:100vh;}
+.book-wrap{
+  position:relative;z-index:2;
+  filter:drop-shadow(-10px 20px 60px rgba(0,0,0,0.9)) drop-shadow(-2px 4px 16px rgba(0,0,0,0.7)) drop-shadow(2px 2px 8px rgba(0,0,0,0.5));
+}
+#flipbook{background:#1c1008;}
+#flipbook .page{background:#fdf8f0;overflow:hidden;}
+#flipbook .hard{background:#1c1008 !important;overflow:hidden;}
+
+/* ── FRONT COVER ── */
+.front-cover{background:#1c1008 !important;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.fc-bg{
+  position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse at 30% 20%,rgba(80,45,15,0.6) 0%,transparent 50%),
+    radial-gradient(ellipse at 70% 80%,rgba(40,20,5,0.7) 0%,transparent 50%),
+    repeating-linear-gradient(135deg,transparent 0px,transparent 3px,rgba(255,255,255,0.012) 3px,rgba(255,255,255,0.012) 4px),
+    linear-gradient(160deg,#2a1608 0%,#1a0e06 50%,#221208 100%);
+}
+.fc-frame{position:absolute;inset:4.5%;border:1px solid rgba(195,160,100,0.35);pointer-events:none;z-index:2;}
+.fc-frame2{position:absolute;inset:6%;border:1px solid rgba(195,160,100,0.13);pointer-events:none;z-index:2;}
+.corner{position:absolute;width:22px;height:22px;border-style:solid;border-color:rgba(195,160,100,0.55);z-index:3;}
+.c-tl{top:4%;left:4%;border-width:1.5px 0 0 1.5px;}
+.c-tr{top:4%;right:4%;border-width:1.5px 1.5px 0 0;}
+.c-bl{bottom:4%;left:4%;border-width:0 0 1.5px 1.5px;}
+.c-br{bottom:4%;right:4%;border-width:0 1.5px 1.5px 0;}
+.spine-l{position:absolute;top:0;left:0;width:12px;height:100%;background:linear-gradient(to right,rgba(0,0,0,0.8),rgba(0,0,0,0.1),transparent);z-index:4;pointer-events:none;}
+.fc-content{position:relative;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;width:100%;padding:10%;text-align:center;}
+.cover-img-box{width:58%;aspect-ratio:3/4;border:1px solid rgba(195,160,100,0.4);box-shadow:0 8px 40px rgba(0,0,0,0.7),inset 0 0 30px rgba(0,0,0,0.4);overflow:hidden;position:relative;margin-bottom:6%;flex-shrink:0;}
+.cover-img-box img{width:100%;height:100%;object-fit:cover;display:block;opacity:0.6;mix-blend-mode:luminosity;}
+.img-fallback{position:absolute;inset:0;background:linear-gradient(145deg,#2e1a0a 0%,#1a0e06 100%);display:flex;align-items:center;justify-content:center;}
+.fallback-svg{opacity:0.22;}
+.cv-eyebrow{font-family:'Cormorant Upright',serif;font-weight:300;font-size:clamp(7px,0.9vw,11px);letter-spacing:0.5em;text-transform:uppercase;color:#c8a86c;opacity:0.7;margin-bottom:8px;}
+.cv-title{font-family:'Playfair Display',serif;font-style:italic;font-weight:400;font-size:clamp(20px,3.2vw,40px);color:#f0e6d3;line-height:1.05;text-shadow:0 3px 24px rgba(0,0,0,0.7);}
+.cv-rule{width:50%;height:1px;margin:10px auto;background:linear-gradient(to right,transparent,rgba(200,168,108,0.6),transparent);}
+.cv-author{font-family:'EB Garamond',serif;font-style:italic;font-size:clamp(9px,1.15vw,14px);color:#c8a86c;opacity:0.75;letter-spacing:0.12em;}
+
+/* ── INNER DARK PAGES ── */
+.cvr-dark{background:linear-gradient(140deg,#231408 0%,#180e06 100%) !important;display:flex;align-items:flex-end;justify-content:flex-end;padding:9%;}
+.cvr-dark span{font-family:'EB Garamond',serif;font-style:italic;font-size:clamp(7px,0.75vw,9px);letter-spacing:0.18em;color:rgba(195,160,100,0.2);writing-mode:vertical-rl;}
+
+/* ── TITLE PAGE ── */
+.title-page{display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fdf8f0 !important;text-align:center;padding:11%;position:relative;overflow:hidden;}
+.title-page::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,rgba(160,120,60,0.05) 0%,transparent 65%);}
+.tp-vline-t{width:1px;background:linear-gradient(to bottom,transparent,#8b2020);margin-bottom:16px;position:relative;z-index:1;}
+.tp-vline-b{width:1px;background:linear-gradient(to bottom,#8b2020,transparent);margin-top:16px;position:relative;z-index:1;}
+.tp-eye{font-family:'Cormorant Upright',serif;font-weight:300;font-size:clamp(7px,0.8vw,9px);letter-spacing:0.5em;text-transform:uppercase;color:#9a8a78;margin-bottom:14px;position:relative;z-index:1;}
+.tp-ttl{font-family:'Playfair Display',serif;font-style:italic;font-weight:400;font-size:clamp(24px,4vw,48px);color:#1a1209;line-height:1.05;margin-bottom:8px;position:relative;z-index:1;}
+.tp-sub{font-family:'EB Garamond',serif;font-style:italic;font-size:clamp(10px,1.15vw,13px);color:#6a5a48;margin-bottom:18px;position:relative;z-index:1;}
+.tp-rule{width:32%;height:1px;margin:0 auto 16px;background:linear-gradient(to right,transparent,rgba(120,100,70,0.3),transparent);position:relative;z-index:1;}
+.tp-auth{font-family:'EB Garamond',serif;font-size:clamp(10px,1.15vw,13px);color:#4a3f30;letter-spacing:0.1em;position:relative;z-index:1;}
+
+/* ── DEDICATION ── */
+.ded-page{display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fdf8f0 !important;text-align:center;padding:14%;position:relative;overflow:hidden;}
+.ded-page::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,rgba(140,100,50,0.04) 0%,transparent 60%);}
+.ded-q{font-family:'Playfair Display',serif;font-style:italic;font-size:clamp(11px,1.5vw,18px);color:#4a3f30;line-height:2;margin-bottom:18px;position:relative;z-index:1;}
+.ded-a{font-family:'EB Garamond',serif;font-size:clamp(9px,1vw,12px);letter-spacing:0.22em;color:#9a8a78;position:relative;z-index:1;}
+
+/* ── POEM PAGES ── */
+.poem-page{display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fdf8f0 !important;position:relative;overflow:hidden;}
+.poem-page::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 70% 50% at 15% 15%,rgba(170,130,70,0.05) 0%,transparent 100%),radial-gradient(ellipse 60% 60% at 85% 85%,rgba(130,90,40,0.04) 0%,transparent 100%);pointer-events:none;}
+.poem-inner{position:relative;z-index:1;width:78%;text-align:center;display:flex;flex-direction:column;align-items:center;}
+.poem-numeral{font-family:'Cormorant Upright',serif;font-weight:300;font-size:clamp(7px,0.78vw,9px);letter-spacing:0.45em;text-transform:uppercase;color:#8b2020;opacity:0.55;margin-bottom:7px;}
+.poem-title{font-family:'Playfair Display',serif;font-style:italic;font-weight:400;font-size:clamp(14px,1.9vw,23px);color:#1a1209;line-height:1.2;margin-bottom:11px;}
+.poem-ornament{color:#8b2020;font-size:clamp(9px,0.9vw,12px);opacity:0.3;letter-spacing:0.7em;margin-bottom:13px;}
+.poem-body{font-family:'EB Garamond',serif;font-style:italic;font-size:clamp(11px,1.3vw,16px);color:#4a3f30;line-height:2.05;text-align:center;}
+.poem-body p{min-height:1.1em;}
+.page-num{position:absolute;bottom:5%;width:100%;text-align:center;font-family:'Cormorant Upright',serif;font-weight:300;font-size:clamp(7px,0.75vw,9px);letter-spacing:0.35em;color:#9a8a78;opacity:0.4;z-index:1;}
+
+/* ── BACK COVER ── */
+.back-cover{background:#1c1008 !important;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:13%;}
+.back-cover::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 60% 30%,rgba(60,35,10,0.5) 0%,transparent 55%),radial-gradient(ellipse at 30% 70%,rgba(30,15,4,0.5) 0%,transparent 55%),repeating-linear-gradient(135deg,transparent 0px,transparent 3px,rgba(255,255,255,0.01) 3px,rgba(255,255,255,0.01) 4px),linear-gradient(160deg,#221408 0%,#180e06 100%);}
+.back-cover::after{content:"";position:absolute;inset:4.5%;border:1px solid rgba(195,160,100,0.3);pointer-events:none;z-index:2;}
+.bc-frame2{position:absolute;inset:6%;z-index:2;pointer-events:none;border:1px solid rgba(195,160,100,0.1);}
+.spine-r{position:absolute;top:0;right:0;width:12px;height:100%;background:linear-gradient(to left,rgba(0,0,0,0.8),rgba(0,0,0,0.1),transparent);z-index:5;pointer-events:none;}
+.bc-corner{position:absolute;width:22px;height:22px;border-style:solid;border-color:rgba(195,160,100,0.45);z-index:4;}
+.bcc-tl{top:4%;left:4%;border-width:1.5px 0 0 1.5px;}
+.bcc-tr{top:4%;right:4%;border-width:1.5px 1.5px 0 0;}
+.bcc-bl{bottom:4%;left:4%;border-width:0 0 1.5px 1.5px;}
+.bcc-br{bottom:4%;right:4%;border-width:0 1.5px 1.5px 0;}
+.bc-content{position:relative;z-index:3;text-align:center;}
+.bc-quote{font-family:'Playfair Display',serif;font-style:italic;font-size:clamp(10px,1.35vw,16px);color:rgba(240,228,208,0.6);line-height:1.9;margin-bottom:16px;}
+.bc-rule{width:30%;height:1px;margin:0 auto 14px;background:linear-gradient(to right,transparent,rgba(195,160,100,0.5),transparent);}
+.bc-author{font-family:'EB Garamond',serif;font-style:italic;font-size:clamp(8px,0.9vw,11px);letter-spacing:0.28em;color:#c8a86c;opacity:0.5;}
+
+/* ── NAV BAR ── */
+.nav-bar{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:200;display:flex;align-items:center;background:rgba(16,10,4,0.82);border:1px solid rgba(195,160,100,0.2);border-radius:100px;overflow:hidden;backdrop-filter:blur(20px);box-shadow:0 6px 28px rgba(0,0,0,0.6);}
+.nav-btn{background:none;border:none;color:rgba(195,160,100,0.6);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:12px 22px;font-size:14px;transition:all .18s;line-height:1;}
+.nav-btn:hover{color:#c8a86c;background:rgba(195,160,100,0.07);}
+.nav-btn:active{transform:scale(0.85);}
+.nav-btn.off{opacity:0.15;pointer-events:none;}
+.nav-sep{width:1px;height:16px;background:rgba(195,160,100,0.12);}
+.nav-label{font-family:'Cormorant Upright',serif;font-weight:300;font-size:10px;letter-spacing:0.22em;color:rgba(195,160,100,0.35);padding:0 18px;min-width:72px;text-align:center;user-select:none;}
+.key-hint{position:fixed;bottom:72px;left:50%;transform:translateX(-50%);font-family:'Cormorant Upright',serif;font-size:9px;letter-spacing:0.22em;color:rgba(195,160,100,0.18);text-transform:uppercase;white-space:nowrap;z-index:200;animation:kh 6s ease 3s both;pointer-events:none;}
+@keyframes kh{0%{opacity:0;}15%{opacity:1;}75%{opacity:1;}100%{opacity:0;}}
+@media(max-width:640px){.key-hint{display:none;}}
+</style>
+</head>
 <body>
 
-  <!-- Ambient background -->
-  <div class="bg-ambient">
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
-    <div class="orb orb-3"></div>
+<!-- Loading screen -->
+<div id="loading">
+  <p class="loading-title">Opening the book…</p>
+  <div class="loading-dots">
+    <div class="dot"></div><div class="dot"></div><div class="dot"></div>
   </div>
+</div>
 
-  <!-- Mobile swipe hint -->
-  <div class="swipe-hint" id="swipeHint">
-    <span>Swipe to turn pages</span>
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 12H19M13 6L19 12L13 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-  </div>
+<!-- Error screen -->
+<div id="error-screen">
+  <p class="err-title">Could not open the book</p>
+  <p class="err-msg" id="err-msg">Make sure <code>poems-list.json</code> exists and the <code>poems/</code> folder is set up correctly.</p>
+  <p class="err-code" id="err-code"></p>
+</div>
 
-  <!-- Mobile navigation -->
-  <div class="mobile-nav">
-    <button class="nav-btn" id="prevBtn" onclick="prevPage()">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M11 6L5 12L11 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </button>
-    <span class="page-indicator" id="pageIndicator">1 / 32</span>
-    <button class="nav-btn" id="nextBtn" onclick="nextPage()">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 12H19M13 6L19 12L13 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </button>
-  </div>
+<div class="scene">
+<div class="book-wrap">
+<div id="flipbook">
+  <!-- Pages are injected here by JavaScript -->
+</div>
+</div>
+</div>
 
-  <!-- Book wrapper -->
-  <div class="book-scene">
-    <div class="book-shadow"></div>
+<div class="nav-bar" id="navBar" style="display:none">
+  <button class="nav-btn off" id="btnPrev" onclick="prevPage()">&#8592;</button>
+  <div class="nav-sep"></div>
+  <span class="nav-label" id="navLabel">&nbsp;</span>
+  <div class="nav-sep"></div>
+  <button class="nav-btn" id="btnNext" onclick="nextPage()">&#8594;</button>
+</div>
+<p class="key-hint" id="keyHint" style="display:none">Use ← → arrow keys to turn pages</p>
 
-    <div class="flipbook" id="flipbook">
+<script src="jquery.js"></script>
+<script src="turn.js"></script>
+<script>
+/* ============================================================
+   CONFIGURATION — edit these if needed
+   ============================================================ */
+var CONFIG = {
+  bookTitle:  "Verses",             /* ✏️ Book title */
+  bookSub:    "a poetry collection",/* ✏️ Subtitle on title page */
+  authorName: "Your Name",          /* ✏️ Author name */
+  coverImage: "images/cover.jpg",   /* ✏️ Cover image path */
+  dedication: "In her words, I found a country<br>I did not know I was homesick for.", /* ✏️ Dedication quote */
+  dedAttr:    "— for you, always",  /* ✏️ Dedication attribution */
+  backQuote:  "She is a poem herself —<br>the kind that changes meaning<br>each time you read it.", /* ✏️ Back cover quote */
+};
 
-      <!-- ============================================================
-           COVER PAGE — Replace the cover image URL below ↓
-           To change the cover: update the src in the <img> tag below
-           or swap the background-image in style.css under .cover-page
-           ============================================================ -->
-      <div class="hard cover-page">
-        <div class="cover-content">
-          <!-- 🎨 COVER IMAGE — replace "images/cover.jpg" with your image path or URL -->
-          <div class="cover-image-wrap">
-            <img src="images/cover.jpg" alt="Cover" class="cover-img" onerror="this.style.display='none'" />
-            <!-- Decorative overlay always visible -->
-            <div class="cover-overlay"></div>
-          </div>
-          <div class="cover-text">
-            <p class="cover-eyebrow">A Collection of</p>
-            <h1 class="cover-title">Poems</h1>
-            <!-- ✍️ AUTHOR NAME — change the name below -->
-            <p class="cover-author">~ YourName</p>
-          </div>
-          <div class="cover-decoration">
-            <div class="deco-line"></div>
-            <svg class="deco-flower" width="40" height="40" viewBox="0 0 40 40" fill="none">
-              <circle cx="20" cy="20" r="3" fill="rgba(255,255,255,0.6)"/>
-              <ellipse cx="20" cy="12" rx="3" ry="6" fill="rgba(255,255,255,0.25)" transform="rotate(0 20 20)"/>
-              <ellipse cx="20" cy="12" rx="3" ry="6" fill="rgba(255,255,255,0.25)" transform="rotate(45 20 20)"/>
-              <ellipse cx="20" cy="12" rx="3" ry="6" fill="rgba(255,255,255,0.25)" transform="rotate(90 20 20)"/>
-              <ellipse cx="20" cy="12" rx="3" ry="6" fill="rgba(255,255,255,0.25)" transform="rotate(135 20 20)"/>
-            </svg>
-            <div class="deco-line"></div>
-          </div>
-        </div>
-      </div>
+/* ============================================================
+   ROMAN NUMERALS helper
+   ============================================================ */
+function toRoman(n){
+  var v=[1000,900,500,400,100,90,50,40,10,9,5,4,1];
+  var s=["M","CM","D","CD","C","XC","L","XL","X","IX","V","IV","I"];
+  var r="";
+  for(var i=0;i<v.length;i++) while(n>=v[i]){r+=s[i];n-=v[i];}
+  return r;
+}
 
-      <!-- Back of cover (blank) -->
-      <div class="hard back-cover-inner"></div>
+/* ============================================================
+   PARSE .txt poem file
+   Format:
+     Line 1      = Title
+     Blank line  = separator after title (skip)
+     Remaining   = poem lines (blank line = stanza break)
+   ============================================================ */
+function parsePoemFile(text){
+  var lines = text.replace(/\r\n/g,"\n").replace(/\r/g,"\n").split("\n");
+  var title = lines[0].trim();
+  var bodyLines = lines.slice(1); // skip title
+  // skip the first blank line after title
+  while(bodyLines.length && bodyLines[0].trim()==="") bodyLines.shift();
+  return { title: title, lines: bodyLines };
+}
 
-      <!-- ============================================================
-           INTRO PAGE (Page 1 of the book interior)
-           ============================================================ -->
-      <div class="page intro-page">
-        <div class="page-inner">
-          <p class="intro-quote">"Poetry is the spontaneous overflow of powerful feelings."</p>
-          <p class="intro-attribution">— William Wordsworth</p>
-          <div class="intro-divider">
-            <span>✦</span>
-          </div>
-          <p class="intro-body">Welcome to this little world of words. Turn the pages gently — each one holds a piece of the heart.</p>
-        </div>
-      </div>
+/* ============================================================
+   BUILD A POEM PAGE
+   ============================================================ */
+function buildPoemPage(poem, index){
+  var linesHtml = poem.lines.map(function(l){
+    return '<p>' + (l.trim() === '' ? '' : escHtml(l)) + '</p>';
+  }).join('');
 
-      <!-- TABLE OF CONTENTS (optional) -->
-      <div class="page toc-page">
-        <div class="page-inner">
-          <h2 class="toc-title">Contents</h2>
-          <div class="toc-list">
-            <div class="toc-item"><span class="toc-num">01</span><span class="toc-name">Poem Title One</span></div>
-            <div class="toc-item"><span class="toc-num">02</span><span class="toc-name">Poem Title Two</span></div>
-            <div class="toc-item"><span class="toc-num">03</span><span class="toc-name">Poem Title Three</span></div>
-            <div class="toc-item"><span class="toc-num">04</span><span class="toc-name">Poem Title Four</span></div>
-            <div class="toc-item"><span class="toc-num">05</span><span class="toc-name">Poem Title Five</span></div>
-            <div class="toc-item"><span class="toc-num">06</span><span class="toc-name">Poem Title Six</span></div>
-            <div class="toc-item"><span class="toc-num">07</span><span class="toc-name">Poem Title Seven</span></div>
-            <div class="toc-item"><span class="toc-num">08</span><span class="toc-name">Poem Title Eight</span></div>
-            <div class="toc-item"><span class="toc-num">09</span><span class="toc-name">Poem Title Nine</span></div>
-            <div class="toc-item"><span class="toc-num">10</span><span class="toc-name">Poem Title Ten</span></div>
-          </div>
-          <p class="toc-more">& 20 more poems…</p>
-        </div>
-        <div class="page-number">ii</div>
-      </div>
+  return '<div class="page poem-page">'
+    + '<div class="poem-inner">'
+    + '<p class="poem-numeral">' + toRoman(index) + '</p>'
+    + '<h2 class="poem-title">' + escHtml(poem.title) + '</h2>'
+    + '<p class="poem-ornament">&#10022; &#10022; &#10022;</p>'
+    + '<div class="poem-body">' + linesHtml + '</div>'
+    + '</div>'
+    + '<p class="page-num">' + index + '</p>'
+    + '</div>';
+}
 
-      <!-- ============================================================
-           POEM PAGES — Duplicate this block for each of your 30 poems
-           Replace POEM TITLE and the poem lines below each block
-           ============================================================ -->
+function escHtml(s){
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
 
-      <!-- POEM 1 -->
-      <div class="page poem-page">
-        <div class="page-inner">
-          <div class="poem-number">I</div>
-          <h2 class="poem-title">Poem Title One</h2>
-          <div class="poem-divider"><span>—</span></div>
-          <div class="poem-body">
-            <p>Here is the first line of your poem,</p>
-            <p>and the second line follows here.</p>
-            <p>A third line blooms like morning light,</p>
-            <p>the fourth fades into night.</p>
-          </div>
-        </div>
-        <div class="page-number">1</div>
-      </div>
+/* ============================================================
+   BUILD STATIC PAGES (covers, title, dedication, back)
+   ============================================================ */
+function buildCover(){
+  return '<div class="hard front-cover">'
+    + '<div class="fc-bg"></div>'
+    + '<div class="fc-frame"></div><div class="fc-frame2"></div>'
+    + '<div class="corner c-tl"></div><div class="corner c-tr"></div>'
+    + '<div class="corner c-bl"></div><div class="corner c-br"></div>'
+    + '<div class="spine-l"></div>'
+    + '<div class="fc-content">'
+    +   '<div class="cover-img-box">'
+    +     '<img src="' + CONFIG.coverImage + '" alt="" onerror="this.style.display=\'none\'"/>'
+    +     '<div class="img-fallback">'
+    +       '<svg class="fallback-svg" width="110" height="140" viewBox="0 0 110 140" fill="none">'
+    +         '<rect x="8" y="8" width="94" height="124" rx="1" stroke="#c8a86c" stroke-width="0.5"/>'
+    +         '<line x1="22" y1="35" x2="88" y2="35" stroke="#c8a86c" stroke-width="0.4"/>'
+    +         '<line x1="22" y1="48" x2="88" y2="48" stroke="#c8a86c" stroke-width="0.4"/>'
+    +         '<line x1="22" y1="61" x2="70" y2="61" stroke="#c8a86c" stroke-width="0.4"/>'
+    +         '<line x1="22" y1="82" x2="88" y2="82" stroke="#c8a86c" stroke-width="0.4"/>'
+    +         '<line x1="22" y1="95" x2="78" y2="95" stroke="#c8a86c" stroke-width="0.4"/>'
+    +         '<line x1="22" y1="108" x2="65" y2="108" stroke="#c8a86c" stroke-width="0.4"/>'
+    +         '<circle cx="55" cy="22" r="9" stroke="#c8a86c" stroke-width="0.4"/>'
+    +       '</svg>'
+    +     '</div>'
+    +   '</div>'
+    +   '<p class="cv-eyebrow">A Collection of Poems</p>'
+    +   '<h1 class="cv-title">' + escHtml(CONFIG.bookTitle) + '</h1>'
+    +   '<div class="cv-rule"></div>'
+    +   '<p class="cv-author">' + escHtml(CONFIG.authorName) + '</p>'
+    + '</div>'
+    + '</div>';
+}
 
-      <div class="page poem-page">
-        <div class="page-inner">
-          <div class="poem-number">II</div>
-          <h2 class="poem-title">Poem Title Two</h2>
-          <div class="poem-divider"><span>—</span></div>
-          <div class="poem-body">
-            <p>Replace this with your second poem's lines,</p>
-            <p>let the stanzas breathe and flow.</p>
-            <p>Each word a stone across the stream,</p>
-            <p>each pause a place to grow.</p>
-          </div>
-        </div>
-        <div class="page-number">2</div>
-      </div>
+function buildBackOfFront(){
+  return '<div class="hard cvr-dark"><span>' + escHtml(CONFIG.bookTitle) + ' &nbsp;·&nbsp; A Poetry Collection</span></div>';
+}
 
-      <div class="page poem-page">
-        <div class="page-inner">
-          <div class="poem-number">III</div>
-          <h2 class="poem-title">Poem Title Three</h2>
-          <div class="poem-divider"><span>—</span></div>
-          <div class="poem-body">
-            <p>Your third poem lives on this page,</p>
-            <p>a quiet corner of your world.</p>
-            <p>The ink still warm, the feeling raw,</p>
-            <p>a banner left unfurled.</p>
-          </div>
-        </div>
-        <div class="page-number">3</div>
-      </div>
+function buildTitlePage(){
+  return '<div class="page title-page">'
+    + '<div class="tp-vline-t" style="height:clamp(22px,4vh,42px)"></div>'
+    + '<p class="tp-eye">A Collection of Poems</p>'
+    + '<h1 class="tp-ttl">' + escHtml(CONFIG.bookTitle) + '</h1>'
+    + '<p class="tp-sub">' + escHtml(CONFIG.bookSub) + '</p>'
+    + '<div class="tp-rule"></div>'
+    + '<p class="tp-auth">' + escHtml(CONFIG.authorName) + '</p>'
+    + '<div class="tp-vline-b" style="height:clamp(22px,4vh,42px)"></div>'
+    + '</div>';
+}
 
-      <div class="page poem-page">
-        <div class="page-inner">
-          <div class="poem-number">IV</div>
-          <h2 class="poem-title">Poem Title Four</h2>
-          <div class="poem-divider"><span>—</span></div>
-          <div class="poem-body">
-            <p>Paste your fourth poem's verses here,</p>
-            <p>each line on its own row.</p>
-            <p>Leave an empty &lt;p&gt;&lt;/p&gt; for stanza breaks,</p>
-            <p>and let the rhythm show.</p>
-          </div>
-        </div>
-        <div class="page-number">4</div>
-      </div>
+function buildDedication(){
+  return '<div class="page ded-page">'
+    + '<p class="ded-q">' + CONFIG.dedication + '</p>'
+    + '<p class="ded-a">' + escHtml(CONFIG.dedAttr) + '</p>'
+    + '</div>';
+}
 
-      <div class="page poem-page">
-        <div class="page-inner">
-          <div class="poem-number">V</div>
-          <h2 class="poem-title">Poem Title Five</h2>
-          <div class="poem-divider"><span>—</span></div>
-          <div class="poem-body">
-            <p>Fifth poem, fifth page — you're finding</p>
-            <p>your groove now. Keep going.</p>
-            <p>Add as many lines as your poem needs,</p>
-            <p>the layout will keep flowing.</p>
-          </div>
-        </div>
-        <div class="page-number">5</div>
-      </div>
+function buildBackInner(){
+  return '<div class="hard cvr-dark" style="align-items:flex-start;justify-content:flex-start;"><span>' + escHtml(CONFIG.bookTitle) + ' &nbsp;·&nbsp; A Poetry Collection</span></div>';
+}
 
-      <div class="page poem-page">
-        <div class="page-inner">
-          <div class="poem-number">VI</div>
-          <h2 class="poem-title">Poem Title Six</h2>
-          <div class="poem-divider"><span>—</span></div>
-          <div class="poem-body">
-            <p>Sixth poem here, replace freely.</p>
-            <p>Each stanza break: an empty &lt;p&gt; tag.</p>
-            <p></p>
-            <p>Like this — a breath between thoughts,</p>
-            <p>a pause, a gentle lag.</p>
-          </div>
-        </div>
-        <div class="page-number">6</div>
-      </div>
+function buildBackCover(){
+  return '<div class="hard back-cover">'
+    + '<div class="bc-frame2"></div>'
+    + '<div class="bc-corner bcc-tl"></div><div class="bc-corner bcc-tr"></div>'
+    + '<div class="bc-corner bcc-bl"></div><div class="bc-corner bcc-br"></div>'
+    + '<div class="spine-r"></div>'
+    + '<div class="bc-content">'
+    +   '<p class="bc-quote">' + CONFIG.backQuote + '</p>'
+    +   '<div class="bc-rule"></div>'
+    +   '<p class="bc-author">' + escHtml(CONFIG.authorName) + '</p>'
+    + '</div>'
+    + '</div>';
+}
 
-      <div class="page poem-page">
-        <div class="page-inner">
-          <div class="poem-number">VII</div>
-          <h2 class="poem-title">Poem Title Seven</h2>
-          <div class="poem-divider"><span>—</span></div>
-          <div class="poem-body">
-            <p>Your seventh poem goes here now,</p>
-            <p>the pages turning soft and slow.</p>
-            <p>The book is filling up with you —</p>
-            <p>with everything you know.</p>
-          </div>
-        </div>
-        <div class="page-number">7</div>
-      </div>
+/* ============================================================
+   INITIALISE TURN.JS
+   ============================================================ */
+function initBook(){
+  var W = window.innerWidth, H = window.innerHeight;
+  var mobile = W < 700;
+  var pageH, pageW;
+  if(mobile){
+    pageH = Math.min(H * 0.76, 580);
+    pageW = pageH / 1.414;
+    if(pageW > W * 0.90){ pageW = W * 0.90; pageH = pageW * 1.414; }
+  } else {
+    pageH = Math.min(H * 0.80, 640);
+    pageW = pageH / 1.414;
+    if(pageW * 2 > W * 0.86){ pageW = (W * 0.86) / 2; pageH = pageW * 1.414; }
+  }
+  var bookW = mobile ? pageW : pageW * 2;
 
-      <div class="page poem-page">
-        <div class="page-inner">
-          <div class="poem-number">VIII</div>
-          <h2 class="poem-title">Poem Title Eight</h2>
-          <div class="poem-divider"><span>—</span></div>
-          <div class="poem-body">
-            <p>Poem eight lives quietly here,</p>
-            <p>waiting for your words to land.</p>
-            <p>Swap these placeholder lines out fast —</p>
-            <p>the stage is yours, as planned.</p>
-          </div>
-        </div>
-        <div class="page-number">8</div>
-      </div>
+  $('#flipbook').turn({
+    width: bookW, height: pageH,
+    autoCenter: true,
+    display: mobile ? 'single' : 'double',
+    acceleration: true, gradients: true, elevation: 50, duration: 850,
+    when:{
+      turning: function(e,p){ updateNav(p); },
+      turned:  function(e,p){ updateNav(p); }
+    }
+  });
 
-      <div class="page poem-page">
-        <div class="page-inner">
-          <div class="poem-number">IX</div>
-          <h2 class="poem-title">Poem Title Nine</h2>
-          <div class="poem-divider"><span>—</span></div>
-          <div class="poem-body">
-            <p>Nine poems in, the book grows warm,</p>
-            <p>familiar like an old friend's voice.</p>
-            <p>Place your verses on this page —</p>
-            <p>each word a careful choice.</p>
-          </div>
-        </div>
-        <div class="page-number">9</div>
-      </div>
+  updateNav(1);
+  $('#loading').addClass('hide');
+  setTimeout(function(){ $('#loading').hide(); }, 700);
+  $('#navBar').show();
+  $('#keyHint').show();
 
-      <div class="page poem-page">
-        <div class="page-inner">
-          <div class="poem-number">X</div>
-          <h2 class="poem-title">Poem Title Ten</h2>
-          <div class="poem-divider"><span>—</span></div>
-          <div class="poem-body">
-            <p>Tenth poem — a milestone reached.</p>
-            <p>Twenty more wait in the wings.</p>
-            <p>Fill each page with what you've felt,</p>
-            <p>with all the small, true things.</p>
-          </div>
-        </div>
-        <div class="page-number">10</div>
-      </div>
+  /* Keyboard */
+  $(document).on('keydown', function(e){
+    if(e.keyCode===37) prevPage();
+    if(e.keyCode===39) nextPage();
+  });
 
-      <!-- POEMS 11–30: duplicate the block below and update the number, title, and lines -->
-      <div class="page poem-page">
-        <div class="page-inner">
-          <div class="poem-number">XI</div>
-          <h2 class="poem-title">Poem Title Eleven</h2>
-          <div class="poem-divider"><span>—</span></div>
-          <div class="poem-body">
-            <p>Add your eleventh poem here.</p>
-            <p>Duplicate this &lt;div class="page poem-page"&gt; block</p>
-            <p>for each of your remaining poems.</p>
-            <p>Just change the number, title, and lines.</p>
-          </div>
-        </div>
-        <div class="page-number">11</div>
-      </div>
+  /* Touch swipe */
+  var tx=0, ty=0;
+  var el = document.getElementById('flipbook');
+  el.addEventListener('touchstart',function(e){tx=e.touches[0].clientX;ty=e.touches[0].clientY;},{passive:true});
+  el.addEventListener('touchend',function(e){
+    var dx=e.changedTouches[0].clientX-tx, dy=e.changedTouches[0].clientY-ty;
+    if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>40){ dx<0?nextPage():prevPage(); }
+  },{passive:true});
+}
 
-      <div class="page poem-page">
-        <div class="page-inner">
-          <div class="poem-number">XII</div>
-          <h2 class="poem-title">Poem Title Twelve</h2>
-          <div class="poem-divider"><span>—</span></div>
-          <div class="poem-body">
-            <p>Poem twelve placeholder.</p>
-            <p>Replace with your actual verse.</p>
-          </div>
-        </div>
-        <div class="page-number">12</div>
-      </div>
+function prevPage(){ $('#flipbook').turn('previous'); }
+function nextPage(){ $('#flipbook').turn('next'); }
+function updateNav(page){
+  var total=$('#flipbook').turn('pages');
+  $('#navLabel').text(page+' / '+total);
+  $('#btnPrev').toggleClass('off',page<=1);
+  $('#btnNext').toggleClass('off',page>=total);
+}
 
-      <div class="page poem-page">
-        <div class="page-inner">
-          <div class="poem-number">XIII</div>
-          <h2 class="poem-title">Poem Title Thirteen</h2>
-          <div class="poem-divider"><span>—</span></div>
-          <div class="poem-body">
-            <p>Poem thirteen placeholder.</p>
-            <p>Replace with your actual verse.</p>
-          </div>
-        </div>
-        <div class="page-number">13</div>
-      </div>
+/* ============================================================
+   MAIN LOADER
+   Reads poems-list.json → fetches each .txt → builds the book
+   ============================================================ */
+function showError(msg, detail){
+  $('#loading').hide();
+  $('#error-screen').css('display','flex');
+  $('#err-msg').html(msg);
+  if(detail) $('#err-code').text(detail);
+}
 
-      <div class="page poem-page">
-        <div class="page-inner">
-          <div class="poem-number">XIV</div>
-          <h2 class="poem-title">Poem Title Fourteen</h2>
-          <div class="poem-divider"><span>—</span></div>
-          <div class="poem-body">
-            <p>Poem fourteen placeholder.</p>
-            <p>Replace with your actual verse.</p>
-          </div>
-        </div>
-        <div class="page-number">14</div>
-      </div>
-
-      <div class="page poem-page">
-        <div class="page-inner">
-          <div class="poem-number">XV</div>
-          <h2 class="poem-title">Poem Title Fifteen</h2>
-          <div class="poem-divider"><span>—</span></div>
-          <div class="poem-body">
-            <p>Poem fifteen placeholder.</p>
-            <p>Replace with your actual verse.</p>
-          </div>
-        </div>
-        <div class="page-number">15</div>
-      </div>
-
-      <div class="page poem-page">
-        <div class="page-inner">
-          <div class="poem-number">XVI</div>
-          <h2 class="poem-title">Poem Title Sixteen</h2>
-          <div class="poem-divider"><span>—</span></div>
-          <div class="poem-body">
-            <p>Poem sixteen placeholder.</p>
-            <p>Replace with your actual verse.</p>
-          </div>
-        </div>
-        <div class="page-number">16</div>
-      </div>
-
-      <div class="page poem-page">
-        <div class="page-inner">
-          <div class="poem-number">XVII</div>
-          <h2 class="poem-title">Poem Title Seventeen</h2>
-          <div class="poem-divider"><span>—</span></div>
-          <div class="poem-body">
-            <p>Poem seventeen placeholder.</p>
-            <p>Replace with your actual verse.</p>
-          </div>
-        </div>
-        <div class="page-number">17</div>
-      </div>
-
-      <div class="page poem-page">
-        <div class="page-inner">
-          <div class="poem-number">XVIII</div>
-          <h2 class="poem-title">Poem Title Eighteen</h2>
-          <div class="poem-divider"><span>—</span></div>
-          <div class="poem-body">
-            <p>Poem eighteen placeholder.</p>
-            <p>Replace with your actual verse.</p>
-          </div>
-        </div>
-        <div class="page-number">18</div>
-      </div>
-
-      <div class="page poem-page">
-        <div class="page-inner">
-          <div class="poem-number">XIX</div>
-          <h2 class="poem-title">Poem Title Nineteen</h2>
-          <div class="poem-divider"><span>—</span></div>
-          <div class="poem-body">
-            <p>Poem nineteen placeholder.</p>
-            <p>Replace with your actual verse.</p>
-          </div>
-        </div>
-        <div class="page-number">19</div>
-      </div>
-
-      <div class="page poem-page">
-        <div class="page-inner">
-          <div class="poem-number">XX</div>
-          <h2 class="poem-title">Poem Title Twenty</h2>
-          <div class="poem-divider"><span>—</span></div>
-          <div class="poem-body">
-            <p>Poem twenty placeholder.</p>
-            <p>Replace with your actual verse.</p>
-          </div>
-        </div>
-        <div class="page-number">20</div>
-      </div>
-
-      <div class="page poem-page">
-        <div class="page-inner">
-          <div class="poem-number">XXI</div>
-          <h2 class="poem-title">Poem Title Twenty-One</h2>
-          <div class="poem-divider"><span>—</span></div>
-          <div class="poem-body">
-            <p>Poem twenty-one placeholder.</p>
-            <p>Replace with your actual verse.</p>
-          </div>
-        </div>
-        <div class="page-number">21</div>
-      </div>
-
-      <div class="page poem-page">
-        <div class="page-inner">
-          <div class="poem-number">XXII</div>
-          <h2 class="poem-title">Poem Title Twenty-Two</h2>
-          <div class="poem-divider"><span>—</span></div>
-          <div class="poem-body">
-            <p>Poem twenty-two placeholder.</p>
-            <p>Replace with your actual verse.</p>
-          </div>
-        </div>
-        <div class="page-number">22</div>
-      </div>
-
-      <div class="page poem-page">
-        <div class="page-inner">
-          <div class="poem-number">XXIII</div>
-          <h2 class="poem-title">Poem Title Twenty-Three</h2>
-          <div class="poem-divider"><span>—</span></div>
-          <div class="poem-body">
-            <p>Poem twenty-three placeholder.</p>
-            <p>Replace with your actual verse.</p>
-          </div>
-        </div>
-        <div class="page-number">23</div>
-      </div>
-
-      <div class="page poem-page">
-        <div class="page-inner">
-          <div class="poem-number">XXIV</div>
-          <h2 class="poem-title">Poem Title Twenty-Four</h2>
-          <div class="poem-divider"><span>—</span></div>
-          <div class="poem-body">
-            <p>Poem twenty-four placeholder.</p>
-            <p>Replace with your actual verse.</p>
-          </div>
-        </div>
-        <div class="page-number">24</div>
-      </div>
-
-      <div class="page poem-page">
-        <div class="page-inner">
-          <div class="poem-number">XXV</div>
-          <h2 class="poem-title">Poem Title Twenty-Five</h2>
-          <div class="poem-divider"><span>—</span></div>
-          <div class="poem-body">
-            <p>Poem twenty-five placeholder.</p>
-            <p>Replace with your actual verse.</p>
-          </div>
-        </div>
-        <div class="page-number">25</div>
-      </div>
-
-      <div class="page poem-page">
-        <div class="page-inner">
-          <div class="poem-number">XXVI</div>
-          <h2 class="poem-title">Poem Title Twenty-Six</h2>
-          <div class="poem-divider"><span>—</span></div>
-          <div class="poem-body">
-            <p>Poem twenty-six placeholder.</p>
-            <p>Replace with your actual verse.</p>
-          </div>
-        </div>
-        <div class="page-number">26</div>
-      </div>
-
-      <div class="page poem-page">
-        <div class="page-inner">
-          <div class="poem-number">XXVII</div>
-          <h2 class="poem-title">Poem Title Twenty-Seven</h2>
-          <div class="poem-divider"><span>—</span></div>
-          <div class="poem-body">
-            <p>Poem twenty-seven placeholder.</p>
-            <p>Replace with your actual verse.</p>
-          </div>
-        </div>
-        <div class="page-number">27</div>
-      </div>
-
-      <div class="page poem-page">
-        <div class="page-inner">
-          <div class="poem-number">XXVIII</div>
-          <h2 class="poem-title">Poem Title Twenty-Eight</h2>
-          <div class="poem-divider"><span>—</span></div>
-          <div class="poem-body">
-            <p>Poem twenty-eight placeholder.</p>
-            <p>Replace with your actual verse.</p>
-          </div>
-        </div>
-        <div class="page-number">28</div>
-      </div>
-
-      <div class="page poem-page">
-        <div class="page-inner">
-          <div class="poem-number">XXIX</div>
-          <h2 class="poem-title">Poem Title Twenty-Nine</h2>
-          <div class="poem-divider"><span>—</span></div>
-          <div class="poem-body">
-            <p>Poem twenty-nine placeholder.</p>
-            <p>Replace with your actual verse.</p>
-          </div>
-        </div>
-        <div class="page-number">29</div>
-      </div>
-
-      <div class="page poem-page">
-        <div class="page-inner">
-          <div class="poem-number">XXX</div>
-          <h2 class="poem-title">Poem Title Thirty</h2>
-          <div class="poem-divider"><span>—</span></div>
-          <div class="poem-body">
-            <p>Your final poem rests here now,</p>
-            <p>the last of thirty — done.</p>
-            <p>The book is yours, the words are yours,</p>
-            <p>the journey has begun.</p>
-          </div>
-        </div>
-        <div class="page-number">30</div>
-      </div>
-
-      <!-- Back matter blank page -->
-      <div class="hard back-cover-inner">
-        <div class="back-inner-content">
-          <svg width="50" height="50" viewBox="0 0 40 40" fill="none" opacity="0.3">
-            <circle cx="20" cy="20" r="3" fill="white"/>
-            <ellipse cx="20" cy="12" rx="3" ry="6" fill="white" transform="rotate(0 20 20)"/>
-            <ellipse cx="20" cy="12" rx="3" ry="6" fill="white" transform="rotate(45 20 20)"/>
-            <ellipse cx="20" cy="12" rx="3" ry="6" fill="white" transform="rotate(90 20 20)"/>
-            <ellipse cx="20" cy="12" rx="3" ry="6" fill="white" transform="rotate(135 20 20)"/>
-          </svg>
-        </div>
-      </div>
-
-      <!-- BACK COVER -->
-      <div class="hard back-cover-page">
-        <div class="back-cover-content">
-          <div class="back-cover-quote">
-            <p>"Words are, in my not so humble opinion, our most inexhaustible source of magic."</p>
-          </div>
-          <div class="back-cover-divider">✦</div>
-          <!-- ✍️ BACK COVER AUTHOR — change name here too -->
-          <p class="back-cover-author">~ YourName</p>
-        </div>
-      </div>
-
-    </div><!-- end .flipbook -->
-  </div><!-- end .book-scene -->
-
-  <!-- Desktop navigation arrows -->
-  <button class="arrow-btn arrow-left" id="arrowLeft" onclick="prevPage()">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M11 6L5 12L11 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-  </button>
-  <button class="arrow-btn arrow-right" id="arrowRight" onclick="nextPage()">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M5 12H19M13 6L19 12L13 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-  </button>
-
-  <script src="jquery.js"></script>
-  <script src="turn.js"></script>
-  <script>
-    $(function () {
-      var isMobile = window.innerWidth <= 700;
-      var bookW = isMobile ? window.innerWidth * 0.92 : Math.min(window.innerWidth * 0.88, 960);
-      var bookH = isMobile ? bookW * 1.35 : bookW * 0.58;
-
-      if (isMobile) {
-        // Single-page mode on mobile
-        $("#flipbook").turn({
-          width: bookW,
-          height: bookH,
-          autoCenter: true,
-          display: "single",
-          acceleration: true,
-          gradients: true,
-          elevation: 50,
-          duration: 700,
-          when: {
-            turning: function (e, page) {
-              updateNav(page);
-            }
-          }
-        });
-      } else {
-        $("#flipbook").turn({
-          width: bookW,
-          height: bookH,
-          autoCenter: true,
-          display: "double",
-          acceleration: true,
-          gradients: true,
-          elevation: 50,
-          duration: 800,
-          when: {
-            turning: function (e, page) {
-              updateNav(page);
-            }
-          }
-        });
+function loadBook(){
+  fetch('poems/poems-list.json')
+    .then(function(r){
+      if(!r.ok) throw new Error('HTTP '+r.status+' — could not load poems-list.json');
+      return r.json();
+    })
+    .then(function(fileList){
+      if(!Array.isArray(fileList)||fileList.length===0){
+        throw new Error('poems-list.json is empty or invalid.');
       }
-
-      // Hide swipe hint after first interaction
-      var hintDismissed = false;
-      $("#flipbook").on("touchstart mousedown", function () {
-        if (!hintDismissed) {
-          $("#swipeHint").fadeOut(400);
-          hintDismissed = true;
-        }
+      /* fetch all poem txt files in parallel */
+      var fetches = fileList.map(function(fname){
+        return fetch('poems/'+fname)
+          .then(function(r){
+            if(!r.ok) throw new Error('Could not load poems/'+fname+' (HTTP '+r.status+')');
+            return r.text();
+          })
+          .then(function(txt){ return parsePoemFile(txt); });
       });
-
-      // Keyboard navigation
-      $(document).keydown(function (e) {
-        if (e.keyCode === 37) prevPage();
-        if (e.keyCode === 39) nextPage();
+      return Promise.all(fetches);
+    })
+    .then(function(poems){
+      /* Build the full book HTML */
+      var html = '';
+      html += buildCover();
+      html += buildBackOfFront();
+      html += buildTitlePage();
+      html += buildDedication();
+      poems.forEach(function(poem, i){
+        html += buildPoemPage(poem, i+1);
       });
+      html += buildBackInner();
+      html += buildBackCover();
 
-      // Touch swipe on mobile
-      var touchStartX = 0;
-      document.getElementById("flipbook").addEventListener("touchstart", function (e) {
-        touchStartX = e.touches[0].clientX;
-      }, { passive: true });
-
-      document.getElementById("flipbook").addEventListener("touchend", function (e) {
-        var dx = e.changedTouches[0].clientX - touchStartX;
-        if (Math.abs(dx) > 50) {
-          if (dx < 0) nextPage();
-          else prevPage();
-        }
-      }, { passive: true });
-
-      updateNav(1);
+      document.getElementById('flipbook').innerHTML = html;
+      initBook();
+    })
+    .catch(function(err){
+      showError(
+        'Something went wrong loading the poems.<br>Make sure <code>poems/poems-list.json</code> and all <code>.txt</code> files exist.',
+        err.message
+      );
     });
+}
 
-    function prevPage() {
-      $("#flipbook").turn("previous");
-    }
-
-    function nextPage() {
-      $("#flipbook").turn("next");
-    }
-
-    function updateNav(page) {
-      var total = $("#flipbook").turn("pages");
-      $("#pageIndicator").text(page + " / " + total);
-      $("#prevBtn, #arrowLeft").toggleClass("disabled", page <= 1);
-      $("#nextBtn, #arrowRight").toggleClass("disabled", page >= total);
-    }
-  </script>
+/* Start */
+document.addEventListener('DOMContentLoaded', loadBook);
+</script>
 </body>
-
 </html>
