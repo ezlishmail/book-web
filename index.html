@@ -13,6 +13,9 @@ html,body{
   background:#100b06;
   display:flex;align-items:center;justify-content:center;
   font-family:'EB Garamond',Georgia,serif;
+  /* Prevent iOS bounce interfering with page turn */
+  touch-action:none;
+  overscroll-behavior:none;
 }
 body::before{
   content:"";position:fixed;inset:0;z-index:0;
@@ -67,11 +70,21 @@ body::after{
 .scene{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;width:100vw;height:100vh;}
 .book-wrap{
   position:relative;z-index:2;
-  filter:drop-shadow(-10px 20px 60px rgba(0,0,0,0.9)) drop-shadow(-2px 4px 16px rgba(0,0,0,0.7)) drop-shadow(2px 2px 8px rgba(0,0,0,0.5));
 }
-#flipbook{background:#1c1008;}
-#flipbook .page{background:#fdf8f0;overflow:hidden;}
-#flipbook .hard{background:#1c1008 !important;overflow:hidden;}
+/* Shadow as pseudo-element so it doesn't repaint during page-turn animation */
+.book-wrap::after{
+  content:"";
+  position:absolute;
+  inset:-20px -30px -40px -30px;
+  background:radial-gradient(ellipse at 50% 80%, rgba(0,0,0,0.7) 0%, transparent 65%);
+  z-index:-1;
+  pointer-events:none;
+}
+#flipbook{background:#1c1008;position:relative;}
+#flipbook .page{background:#fdf8f0;overflow:hidden;position:absolute;}
+#flipbook .hard{background:#1c1008 !important;overflow:hidden;position:absolute;}
+/* Turn.js page wrapper — must not clip during animation */
+#flipbook .page-wrapper{overflow:visible !important;}
 
 /* ── FRONT COVER ── */
 .front-cover{background:#1c1008 !important;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;}
@@ -321,26 +334,51 @@ function buildBackCover(){
 function initBook(){
   var W = window.innerWidth, H = window.innerHeight;
   var mobile = W < 700;
+
+  /* ── Integer pixel dimensions — prevents subpixel rendering tears ── */
   var pageH, pageW;
   if(mobile){
-    pageH = Math.min(H * 0.76, 580);
-    pageW = pageH / 1.414;
-    if(pageW > W * 0.90){ pageW = W * 0.90; pageH = pageW * 1.414; }
+    pageH = Math.floor(Math.min(H * 0.76, 560));
+    pageW = Math.floor(pageH / 1.414);
+    if(pageW > Math.floor(W * 0.92)){ pageW = Math.floor(W * 0.92); pageH = Math.floor(pageW * 1.414); }
   } else {
-    pageH = Math.min(H * 0.80, 640);
-    pageW = pageH / 1.414;
-    if(pageW * 2 > W * 0.86){ pageW = (W * 0.86) / 2; pageH = pageW * 1.414; }
+    pageH = Math.floor(Math.min(H * 0.80, 620));
+    pageW = Math.floor(pageH / 1.414);
+    if(pageW * 2 > Math.floor(W * 0.86)){ pageW = Math.floor((W * 0.86) / 2); pageH = Math.floor(pageW * 1.414); }
   }
+  /* Both dimensions must be even numbers — turn.js requirement */
+  if(pageW % 2 !== 0) pageW -= 1;
+  if(pageH % 2 !== 0) pageH -= 1;
   var bookW = mobile ? pageW : pageW * 2;
 
+  /* ── turn.js needs total page count to be EVEN for double display ──
+     Pages: 1 front cover + 1 back-of-front + 1 title + 1 dedication
+            + N poems + 1 back-inner + 1 back cover
+     = N + 6. We pad with a blank page if needed to make it even. */
+  var totalPages = POEMS.length + 6;
+  if(!mobile && totalPages % 2 !== 0){
+    var blank = document.createElement('div');
+    blank.className = 'page poem-page';
+    blank.innerHTML = '<div class="poem-inner"></div>';
+    document.getElementById('flipbook').appendChild(blank);
+  }
+
+  /* ── Apply explicit pixel size to every child so turn.js gets clean numbers ── */
+  $('#flipbook').css({ width: bookW, height: pageH, overflow: 'visible' });
+  $('#flipbook').children().css({ width: pageW, height: pageH });
+
   $('#flipbook').turn({
-    width: bookW, height: pageH,
-    autoCenter: true,
-    display: mobile ? 'single' : 'double',
-    acceleration: true, gradients: true, elevation: 50, duration: 850,
+    width:        bookW,
+    height:       pageH,
+    autoCenter:   true,
+    display:      mobile ? 'single' : 'double',
+    acceleration: false,   /* false = no GPU glitch / white flash */
+    gradients:    true,
+    elevation:    50,
+    duration:     800,
     when:{
-      turning: function(e,p){ updateNav(p); },
-      turned:  function(e,p){ updateNav(p); }
+      turning: function(e, p){ updateNav(p); },
+      turned:  function(e, p){ updateNav(p); }
     }
   });
 
@@ -350,20 +388,30 @@ function initBook(){
   $('#navBar').show();
   $('#keyHint').show();
 
-  /* Keyboard */
-  $(document).on('keydown', function(e){
-    if(e.keyCode===37) prevPage();
-    if(e.keyCode===39) nextPage();
+  /* ── Keyboard ── */
+  $(document).off('keydown.book').on('keydown.book', function(e){
+    if(e.keyCode === 37) prevPage();
+    if(e.keyCode === 39) nextPage();
   });
 
-  /* Touch swipe */
-  var tx=0, ty=0;
+  /* ── Touch swipe — only horizontal, no scroll interference ── */
+  var tx = 0, ty = 0, swiping = false;
   var el = document.getElementById('flipbook');
-  el.addEventListener('touchstart',function(e){tx=e.touches[0].clientX;ty=e.touches[0].clientY;},{passive:true});
-  el.addEventListener('touchend',function(e){
-    var dx=e.changedTouches[0].clientX-tx, dy=e.changedTouches[0].clientY-ty;
-    if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>40){ dx<0?nextPage():prevPage(); }
-  },{passive:true});
+  el.addEventListener('touchstart', function(e){
+    tx = e.touches[0].clientX;
+    ty = e.touches[0].clientY;
+    swiping = false;
+  }, { passive: true });
+  el.addEventListener('touchmove', function(e){
+    var dx = Math.abs(e.touches[0].clientX - tx);
+    var dy = Math.abs(e.touches[0].clientY - ty);
+    if(dx > dy && dx > 10) swiping = true;
+  }, { passive: true });
+  el.addEventListener('touchend', function(e){
+    if(!swiping) return;
+    var dx = e.changedTouches[0].clientX - tx;
+    if(Math.abs(dx) > 40){ dx < 0 ? nextPage() : prevPage(); }
+  }, { passive: true });
 }
 
 function prevPage(){ $('#flipbook').turn('previous'); }
