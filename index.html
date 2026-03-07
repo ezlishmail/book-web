@@ -409,20 +409,45 @@ function showError(msg, detail){
 }
 
 function loadBook(){
+
+  /* Detect file:// protocol — won't work locally */
+  if(window.location.protocol === 'file:'){
+    showError(
+      'You\'re opening this directly from your computer (file://).<br><br>'
+      + 'This won\'t work because browsers block local file loading.<br><br>'
+      + '<strong>Fix:</strong> Push all files to GitHub and open the GitHub Pages URL instead.<br>'
+      + 'Or use a local server: <code>npx serve .</code> in the project folder.',
+      'protocol: file:// — fetch() is blocked'
+    );
+    return;
+  }
+
   fetch('poems/poems-list.json')
     .then(function(r){
-      if(!r.ok) throw new Error('HTTP '+r.status+' — could not load poems-list.json');
+      if(r.status === 404){
+        throw new Error(
+          'MISSING FILE: poems/poems-list.json\n\n'
+          + 'Make sure you uploaded the entire "poems" folder to GitHub, not just index.html.'
+        );
+      }
+      if(!r.ok) throw new Error('HTTP ' + r.status + ' loading poems-list.json');
       return r.json();
     })
     .then(function(fileList){
-      if(!Array.isArray(fileList)||fileList.length===0){
-        throw new Error('poems-list.json is empty or invalid.');
+      if(!Array.isArray(fileList) || fileList.length === 0){
+        throw new Error('poems-list.json is empty. Add your poem filenames to it.');
       }
-      /* fetch all poem txt files in parallel */
       var fetches = fileList.map(function(fname){
-        return fetch('poems/'+fname)
+        return fetch('poems/' + fname)
           .then(function(r){
-            if(!r.ok) throw new Error('Could not load poems/'+fname+' (HTTP '+r.status+')');
+            if(r.status === 404){
+              throw new Error(
+                'MISSING FILE: poems/' + fname + '\n\n'
+                + 'This file is listed in poems-list.json but wasn\'t found.\n'
+                + 'Make sure you uploaded it to the poems/ folder on GitHub.'
+              );
+            }
+            if(!r.ok) throw new Error('HTTP ' + r.status + ' loading poems/' + fname);
             return r.text();
           })
           .then(function(txt){ return parsePoemFile(txt); });
@@ -430,24 +455,20 @@ function loadBook(){
       return Promise.all(fetches);
     })
     .then(function(poems){
-      /* Build the full book HTML */
       var html = '';
       html += buildCover();
       html += buildBackOfFront();
       html += buildTitlePage();
       html += buildDedication();
-      poems.forEach(function(poem, i){
-        html += buildPoemPage(poem, i+1);
-      });
+      poems.forEach(function(poem, i){ html += buildPoemPage(poem, i+1); });
       html += buildBackInner();
       html += buildBackCover();
-
       document.getElementById('flipbook').innerHTML = html;
       initBook();
     })
     .catch(function(err){
       showError(
-        'Something went wrong loading the poems.<br>Make sure <code>poems/poems-list.json</code> and all <code>.txt</code> files exist.',
+        'Could not open the book. See the error below.',
         err.message
       );
     });
