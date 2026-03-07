@@ -172,12 +172,6 @@ body::after{
   </div>
 </div>
 
-<!-- Error screen -->
-<div id="error-screen">
-  <p class="err-title">Could not open the book</p>
-  <p class="err-msg" id="err-msg">Make sure <code>poems-list.json</code> exists and the <code>poems/</code> folder is set up correctly.</p>
-  <p class="err-code" id="err-code"></p>
-</div>
 
 <div class="scene">
 <div class="book-wrap">
@@ -221,22 +215,6 @@ function toRoman(n){
   var r="";
   for(var i=0;i<v.length;i++) while(n>=v[i]){r+=s[i];n-=v[i];}
   return r;
-}
-
-/* ============================================================
-   PARSE .txt poem file
-   Format:
-     Line 1      = Title
-     Blank line  = separator after title (skip)
-     Remaining   = poem lines (blank line = stanza break)
-   ============================================================ */
-function parsePoemFile(text){
-  var lines = text.replace(/\r\n/g,"\n").replace(/\r/g,"\n").split("\n");
-  var title = lines[0].trim();
-  var bodyLines = lines.slice(1); // skip title
-  // skip the first blank line after title
-  while(bodyLines.length && bodyLines[0].trim()==="") bodyLines.shift();
-  return { title: title, lines: bodyLines };
 }
 
 /* ============================================================
@@ -398,80 +376,183 @@ function updateNav(page){
 }
 
 /* ============================================================
-   MAIN LOADER
-   Reads poems-list.json → fetches each .txt → builds the book
+   POEMS DATA
+   ✏️  Replace these with your actual poems.
+   Each poem: { title: "...", lines: ["line1", "line2", "", "stanza break = empty string"] }
+
+   TO ADD MORE POEMS: copy one { title:..., lines:[...] } block,
+   paste it at the end of the array (before the ] ), add a comma after the one above it.
    ============================================================ */
-function showError(msg, detail){
-  $('#loading').hide();
-  $('#error-screen').css('display','flex');
-  $('#err-msg').html(msg);
-  if(detail) $('#err-code').text(detail);
-}
-
-function loadBook(){
-
-  /* Detect file:// protocol — won't work locally */
-  if(window.location.protocol === 'file:'){
-    showError(
-      'You\'re opening this directly from your computer (file://).<br><br>'
-      + 'This won\'t work because browsers block local file loading.<br><br>'
-      + '<strong>Fix:</strong> Push all files to GitHub and open the GitHub Pages URL instead.<br>'
-      + 'Or use a local server: <code>npx serve .</code> in the project folder.',
-      'protocol: file:// — fetch() is blocked'
-    );
-    return;
+var POEMS = [
+  {
+    title: "Morning Light",
+    lines: [
+      "The sun does not ask permission",
+      "before it floods the room —",
+      "it simply arrives, as you do,",
+      "quiet and warm and certain.",
+      "",
+      "I have learned to wake early",
+      "just to watch the way light",
+      "finds the things I love first.",
+      "",
+      "It always finds you first."
+    ]
+  },
+  {
+    title: "What I Kept",
+    lines: [
+      "There are things I never said",
+      "that I keep folded in my chest",
+      "like letters I wrote at 2 a.m.",
+      "and was too afraid to send.",
+      "",
+      "But I kept them.",
+      "I keep everything of you."
+    ]
+  },
+  {
+    title: "The Ordinary Hours",
+    lines: [
+      "It is not the grand gestures",
+      "that undo me —",
+      "it is the Tuesday afternoons,",
+      "the half-drunk cup of tea,",
+      "the way you laugh at your own jokes",
+      "before you finish telling them.",
+      "",
+      "It is the ordinary hours",
+      "that I would choose again and again."
+    ]
+  },
+  {
+    title: "Distance",
+    lines: [
+      "Some nights the sky feels close enough",
+      "to fold and put inside a pocket.",
+      "",
+      "Some nights it does not.",
+      "",
+      "Either way, I am still here,",
+      "standing under the same stars,",
+      "counting the ones that remind me of you."
+    ]
+  },
+  {
+    title: "Small Graces",
+    lines: [
+      "Thank you for the window you opened",
+      "when I had forgotten there were windows.",
+      "",
+      "Thank you for the word you said",
+      "when I had run out of words.",
+      "",
+      "Thank you for staying in the room",
+      "when I made it hard to stay.",
+      "",
+      "These are the things I will remember",
+      "when I am old and the rest has gone soft —",
+      "your small graces,",
+      "which were never small at all."
+    ]
+  },
+  {
+    title: "Cartography",
+    lines: [
+      "I have been mapping you",
+      "the way explorers mapped coastlines —",
+      "imprecisely, devotedly,",
+      "always finding new edges.",
+      "",
+      "There is the country of your laugh.",
+      "There is the province of your silences.",
+      "There is the small, unnamed bay",
+      "where you rest your chin when you are thinking.",
+      "",
+      "I would spend a lifetime",
+      "making this map wrong."
+    ]
+  },
+  {
+    title: "After the Rain",
+    lines: [
+      "Everything smells like beginning.",
+      "",
+      "The garden does not know",
+      "how long it waited —",
+      "it only knows the rain is here now,",
+      "and opens.",
+      "",
+      "I think of you.",
+      "I think of how I open."
+    ]
+  },
+  {
+    title: "Still Life With You",
+    lines: [
+      "Two cups.",
+      "One window.",
+      "The particular blue of late afternoon",
+      "that only exists in October.",
+      "",
+      "You, reading.",
+      "Me, watching you read",
+      "and pretending not to.",
+      "",
+      "If I could paint, I would paint this.",
+      "I would call it: enough.",
+      "I would call it: more than."
+    ]
+  },
+  {
+    title: "Instructions for Loving You",
+    lines: [
+      "Do not hurry.",
+      "",
+      "Arrive the way water arrives —",
+      "finding every low place,",
+      "filling without forcing,",
+      "patient with the stone.",
+      "",
+      "Bring your whole self.",
+      "Leave room for mine.",
+      "",
+      "Do not hurry.",
+      "There is no one else I am waiting for."
+    ]
+  },
+  {
+    title: "The Long Way",
+    lines: [
+      "We could have taken the short road.",
+      "We did not.",
+      "",
+      "We took the one with the broken fence",
+      "and the field that smelled like clover",
+      "and the detour through the town",
+      "where nothing was happening",
+      "except everything.",
+      "",
+      "I am glad we took the long way.",
+      "I am glad it was with you."
+    ]
   }
+];
 
-  fetch('poems/poems-list.json')
-    .then(function(r){
-      if(r.status === 404){
-        throw new Error(
-          'MISSING FILE: poems/poems-list.json\n\n'
-          + 'Make sure you uploaded the entire "poems" folder to GitHub, not just index.html.'
-        );
-      }
-      if(!r.ok) throw new Error('HTTP ' + r.status + ' loading poems-list.json');
-      return r.json();
-    })
-    .then(function(fileList){
-      if(!Array.isArray(fileList) || fileList.length === 0){
-        throw new Error('poems-list.json is empty. Add your poem filenames to it.');
-      }
-      var fetches = fileList.map(function(fname){
-        return fetch('poems/' + fname)
-          .then(function(r){
-            if(r.status === 404){
-              throw new Error(
-                'MISSING FILE: poems/' + fname + '\n\n'
-                + 'This file is listed in poems-list.json but wasn\'t found.\n'
-                + 'Make sure you uploaded it to the poems/ folder on GitHub.'
-              );
-            }
-            if(!r.ok) throw new Error('HTTP ' + r.status + ' loading poems/' + fname);
-            return r.text();
-          })
-          .then(function(txt){ return parsePoemFile(txt); });
-      });
-      return Promise.all(fetches);
-    })
-    .then(function(poems){
-      var html = '';
-      html += buildCover();
-      html += buildBackOfFront();
-      html += buildTitlePage();
-      html += buildDedication();
-      poems.forEach(function(poem, i){ html += buildPoemPage(poem, i+1); });
-      html += buildBackInner();
-      html += buildBackCover();
-      document.getElementById('flipbook').innerHTML = html;
-      initBook();
-    })
-    .catch(function(err){
-      showError(
-        'Could not open the book. See the error below.',
-        err.message
-      );
-    });
+/* ============================================================
+   MAIN — build and launch the book
+   ============================================================ */
+function loadBook(){
+  var html = '';
+  html += buildCover();
+  html += buildBackOfFront();
+  html += buildTitlePage();
+  html += buildDedication();
+  POEMS.forEach(function(poem, i){ html += buildPoemPage(poem, i+1); });
+  html += buildBackInner();
+  html += buildBackCover();
+  document.getElementById('flipbook').innerHTML = html;
+  initBook();
 }
 
 /* Start */
