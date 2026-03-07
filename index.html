@@ -4,433 +4,469 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=EB+Garamond:ital,wght@0,400;1,400;1,500&family=Cormorant+Upright:wght@300;400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,400;1,600&family=EB+Garamond:ital,wght@0,400;1,400&family=Cormorant+Upright:wght@300;400&display=swap" rel="stylesheet">
 <title>Verses — A Poetry Collection</title>
 <style>
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-html,body{
-  width:100%;height:100%;overflow:hidden;
-  background:#100b06;
-  display:flex;align-items:center;justify-content:center;
-  font-family:'EB Garamond',Georgia,serif;
-  /* Prevent iOS bounce interfering with page turn */
-  touch-action:none;
-  overscroll-behavior:none;
+
+/* ─────────────────────────────────────────────
+   RESET
+───────────────────────────────────────────── */
+*, *::before, *::after {
+  margin: 0; padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
-body::before{
-  content:"";position:fixed;inset:0;z-index:0;
+
+/* ─────────────────────────────────────────────
+   BACKGROUND — deep dusty rose / mauve
+───────────────────────────────────────────── */
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  font-family: 'EB Garamond', Georgia, serif;
+  background: #1a0e14;
+}
+
+.bg {
+  position: fixed; inset: 0; z-index: 0;
   background:
-    radial-gradient(ellipse 80% 60% at 50% 0%,rgba(180,120,50,0.07) 0%,transparent 100%),
-    radial-gradient(ellipse 60% 80% at 20% 80%,rgba(80,40,10,0.4) 0%,transparent 60%),
-    radial-gradient(ellipse 60% 80% at 80% 20%,rgba(60,30,8,0.4) 0%,transparent 60%),
-    repeating-linear-gradient(88deg,transparent 0px,transparent 6px,rgba(255,255,255,0.006) 6px,rgba(255,255,255,0.006) 7px),
-    linear-gradient(170deg,#1e1208 0%,#0d0804 55%,#181005 100%);
+    radial-gradient(ellipse 90% 70% at 50% -10%, rgba(180,100,120,0.13) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 60% at 10% 90%, rgba(100,50,70,0.25) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 50% at 90% 10%, rgba(80,40,60,0.2) 0%, transparent 55%),
+    linear-gradient(160deg, #221018 0%, #130a10 55%, #1e0f18 100%);
 }
-body::after{
-  content:"";position:fixed;top:-100px;left:50%;transform:translateX(-50%);
-  width:900px;height:600px;z-index:0;pointer-events:none;
-  background:radial-gradient(ellipse,rgba(200,160,80,0.06) 0%,transparent 60%);
-}
-
-/* ── Loading screen ── */
-#loading{
-  position:fixed;inset:0;z-index:1000;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  background:#100b06;gap:18px;
-  transition:opacity 0.6s ease;
-}
-#loading.hide{opacity:0;pointer-events:none;}
-.loading-title{
-  font-family:'Playfair Display',serif;font-style:italic;
-  font-size:clamp(20px,3vw,32px);color:rgba(200,168,108,0.7);
-}
-.loading-dots{display:flex;gap:8px;}
-.dot{
-  width:6px;height:6px;border-radius:50%;
-  background:rgba(200,168,108,0.4);
-  animation:dotPulse 1.2s ease-in-out infinite;
-}
-.dot:nth-child(2){animation-delay:0.2s;}
-.dot:nth-child(3){animation-delay:0.4s;}
-@keyframes dotPulse{
-  0%,100%{transform:scale(1);opacity:0.3;}
-  50%{transform:scale(1.4);opacity:1;}
+/* subtle overhead glow */
+.bg::after {
+  content: "";
+  position: absolute; top: -80px; left: 50%; transform: translateX(-50%);
+  width: 700px; height: 500px;
+  background: radial-gradient(ellipse, rgba(210,140,160,0.06) 0%, transparent 60%);
+  pointer-events: none;
 }
 
-/* ── Error screen ── */
-#error-screen{
-  position:fixed;inset:0;z-index:999;
-  display:none;flex-direction:column;align-items:center;justify-content:center;
-  background:#100b06;padding:40px;text-align:center;gap:16px;
+/* ─────────────────────────────────────────────
+   SCENE
+───────────────────────────────────────────── */
+.scene {
+  position: relative; z-index: 1;
+  width: 100vw; height: 100vh;
+  display: flex; align-items: center; justify-content: center;
 }
-.err-title{font-family:'Playfair Display',serif;font-style:italic;font-size:24px;color:rgba(200,168,108,0.8);}
-.err-msg{font-family:'EB Garamond',serif;font-size:15px;color:rgba(200,168,108,0.4);line-height:1.7;max-width:420px;}
-.err-code{font-family:monospace;font-size:12px;color:rgba(200,168,108,0.25);margin-top:8px;}
 
-.scene{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;width:100vw;height:100vh;}
-.book-wrap{
-  position:relative;z-index:2;
+/* ─────────────────────────────────────────────
+   BOOK WRAP
+   Shadow as a separate element — never repaints
+   during turn.js animation (no filter on parent)
+───────────────────────────────────────────── */
+.book-wrap {
+  position: relative; z-index: 2;
+  /* NO filter here — it causes repaint on every animation frame */
 }
-/* Shadow as pseudo-element so it doesn't repaint during page-turn animation */
-.book-wrap::after{
-  content:"";
-  position:absolute;
-  inset:-20px -30px -40px -30px;
-  background:radial-gradient(ellipse at 50% 80%, rgba(0,0,0,0.7) 0%, transparent 65%);
-  z-index:-1;
-  pointer-events:none;
+.book-shadow {
+  position: absolute;
+  bottom: -28px; left: 4%; right: 4%; height: 50px;
+  background: radial-gradient(ellipse, rgba(0,0,0,0.65) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: -1;
 }
-#flipbook{background:#1c1008;position:relative;}
-#flipbook .page{background:#fdf8f0;overflow:hidden;position:absolute;}
-#flipbook .hard{background:#1c1008 !important;overflow:hidden;position:absolute;}
-/* Turn.js page wrapper — must not clip during animation */
-#flipbook .page-wrapper{overflow:visible !important;}
 
-/* ── FRONT COVER ── */
-.front-cover{background:#1c1008 !important;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;}
-.fc-bg{
-  position:absolute;inset:0;
+/* ─────────────────────────────────────────────
+   TURN.JS CORE — critical for no-glitch
+───────────────────────────────────────────── */
+#flipbook {
+  /* GPU layer for the container */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
+}
+
+/* turn.js sets these itself — do NOT override position/size */
+#flipbook .page,
+#flipbook .hard {
+  /* overflow hidden is required */
+  overflow: hidden;
+}
+
+/* ─────────────────────────────────────────────
+   FRONT COVER  — deep mauve / plum leather
+───────────────────────────────────────────── */
+.front-cover {
+  /* Rounded left corners only */
+  border-radius: 10px 0 0 10px;
+  overflow: hidden;
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+}
+/* Leather texture via layered gradients */
+.front-cover::before {
+  content: "";
+  position: absolute; inset: 0;
   background:
-    radial-gradient(ellipse at 30% 20%,rgba(80,45,15,0.6) 0%,transparent 50%),
-    radial-gradient(ellipse at 70% 80%,rgba(40,20,5,0.7) 0%,transparent 50%),
-    repeating-linear-gradient(135deg,transparent 0px,transparent 3px,rgba(255,255,255,0.012) 3px,rgba(255,255,255,0.012) 4px),
-    linear-gradient(160deg,#2a1608 0%,#1a0e06 50%,#221208 100%);
+    radial-gradient(ellipse at 35% 25%, rgba(120,60,85,0.5) 0%, transparent 55%),
+    radial-gradient(ellipse at 65% 75%, rgba(60,20,40,0.6) 0%, transparent 55%),
+    repeating-linear-gradient(128deg, transparent 0, transparent 4px, rgba(255,255,255,0.014) 4px, rgba(255,255,255,0.014) 5px),
+    linear-gradient(155deg, #3d1a2a 0%, #251018 55%, #341522 100%);
+  border-radius: inherit;
 }
-.fc-frame{position:absolute;inset:4.5%;border:1px solid rgba(195,160,100,0.35);pointer-events:none;z-index:2;}
-.fc-frame2{position:absolute;inset:6%;border:1px solid rgba(195,160,100,0.13);pointer-events:none;z-index:2;}
-.corner{position:absolute;width:22px;height:22px;border-style:solid;border-color:rgba(195,160,100,0.55);z-index:3;}
-.c-tl{top:4%;left:4%;border-width:1.5px 0 0 1.5px;}
-.c-tr{top:4%;right:4%;border-width:1.5px 1.5px 0 0;}
-.c-bl{bottom:4%;left:4%;border-width:0 0 1.5px 1.5px;}
-.c-br{bottom:4%;right:4%;border-width:0 1.5px 1.5px 0;}
-.spine-l{position:absolute;top:0;left:0;width:12px;height:100%;background:linear-gradient(to right,rgba(0,0,0,0.8),rgba(0,0,0,0.1),transparent);z-index:4;pointer-events:none;}
-.fc-content{position:relative;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;width:100%;padding:10%;text-align:center;}
-.cover-img-box{width:58%;aspect-ratio:3/4;border:1px solid rgba(195,160,100,0.4);box-shadow:0 8px 40px rgba(0,0,0,0.7),inset 0 0 30px rgba(0,0,0,0.4);overflow:hidden;position:relative;margin-bottom:6%;flex-shrink:0;}
-.cover-img-box img{width:100%;height:100%;object-fit:cover;display:block;opacity:0.6;mix-blend-mode:luminosity;}
-.img-fallback{position:absolute;inset:0;background:linear-gradient(145deg,#2e1a0a 0%,#1a0e06 100%);display:flex;align-items:center;justify-content:center;}
-.fallback-svg{opacity:0.22;}
-.cv-eyebrow{font-family:'Cormorant Upright',serif;font-weight:300;font-size:clamp(7px,0.9vw,11px);letter-spacing:0.5em;text-transform:uppercase;color:#c8a86c;opacity:0.7;margin-bottom:8px;}
-.cv-title{font-family:'Playfair Display',serif;font-style:italic;font-weight:400;font-size:clamp(20px,3.2vw,40px);color:#f0e6d3;line-height:1.05;text-shadow:0 3px 24px rgba(0,0,0,0.7);}
-.cv-rule{width:50%;height:1px;margin:10px auto;background:linear-gradient(to right,transparent,rgba(200,168,108,0.6),transparent);}
-.cv-author{font-family:'EB Garamond',serif;font-style:italic;font-size:clamp(9px,1.15vw,14px);color:#c8a86c;opacity:0.75;letter-spacing:0.12em;}
+/* outer gold frame */
+.front-cover::after {
+  content: "";
+  position: absolute; inset: 4.5%;
+  border: 1px solid rgba(210,170,150,0.3);
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 2;
+}
+/* spine shadow */
+.front-cover .spine {
+  position: absolute; top: 0; left: 0; width: 14px; height: 100%;
+  background: linear-gradient(to right, rgba(0,0,0,0.75), rgba(0,0,0,0.08), transparent);
+  z-index: 5; border-radius: 10px 0 0 10px; pointer-events: none;
+}
+/* inner frame */
+.front-cover .inner-frame {
+  position: absolute; inset: 6%;
+  border: 1px solid rgba(210,170,150,0.1);
+  border-radius: 1px;
+  pointer-events: none; z-index: 2;
+}
+/* corner ornaments */
+.front-cover .cn {
+  position: absolute; width: 20px; height: 20px;
+  border-color: rgba(210,170,150,0.5); border-style: solid; z-index: 3;
+}
+.cn.tl { top: 4%;   left: 4%;   border-width: 1.5px 0 0 1.5px; }
+.cn.tr { top: 4%;   right: 4%;  border-width: 1.5px 1.5px 0 0; }
+.cn.bl { bottom: 4%; left: 4%;  border-width: 0 0 1.5px 1.5px; }
+.cn.br { bottom: 4%; right: 4%; border-width: 0 1.5px 1.5px 0; }
 
-/* ── INNER DARK PAGES ── */
-.cvr-dark{background:linear-gradient(140deg,#231408 0%,#180e06 100%) !important;display:flex;align-items:flex-end;justify-content:flex-end;padding:9%;}
-.cvr-dark span{font-family:'EB Garamond',serif;font-style:italic;font-size:clamp(7px,0.75vw,9px);letter-spacing:0.18em;color:rgba(195,160,100,0.2);writing-mode:vertical-rl;}
+.fc-body {
+  position: relative; z-index: 4;
+  display: flex; flex-direction: column; align-items: center;
+  width: 100%; padding: 9%;
+  text-align: center;
+}
 
-/* ── TITLE PAGE ── */
-.title-page{display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fdf8f0 !important;text-align:center;padding:11%;position:relative;overflow:hidden;}
-.title-page::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,rgba(160,120,60,0.05) 0%,transparent 65%);}
-.tp-vline-t{width:1px;background:linear-gradient(to bottom,transparent,#8b2020);margin-bottom:16px;position:relative;z-index:1;}
-.tp-vline-b{width:1px;background:linear-gradient(to bottom,#8b2020,transparent);margin-top:16px;position:relative;z-index:1;}
-.tp-eye{font-family:'Cormorant Upright',serif;font-weight:300;font-size:clamp(7px,0.8vw,9px);letter-spacing:0.5em;text-transform:uppercase;color:#9a8a78;margin-bottom:14px;position:relative;z-index:1;}
-.tp-ttl{font-family:'Playfair Display',serif;font-style:italic;font-weight:400;font-size:clamp(24px,4vw,48px);color:#1a1209;line-height:1.05;margin-bottom:8px;position:relative;z-index:1;}
-.tp-sub{font-family:'EB Garamond',serif;font-style:italic;font-size:clamp(10px,1.15vw,13px);color:#6a5a48;margin-bottom:18px;position:relative;z-index:1;}
-.tp-rule{width:32%;height:1px;margin:0 auto 16px;background:linear-gradient(to right,transparent,rgba(120,100,70,0.3),transparent);position:relative;z-index:1;}
-.tp-auth{font-family:'EB Garamond',serif;font-size:clamp(10px,1.15vw,13px);color:#4a3f30;letter-spacing:0.1em;position:relative;z-index:1;}
+/* cover image box */
+.cov-img-wrap {
+  width: 56%; aspect-ratio: 3/4;
+  border: 1px solid rgba(210,170,150,0.35);
+  box-shadow: 0 6px 35px rgba(0,0,0,0.65), inset 0 0 25px rgba(0,0,0,0.45);
+  overflow: hidden; position: relative;
+  margin-bottom: 7%; flex-shrink: 0;
+}
+.cov-img-wrap img {
+  width: 100%; height: 100%;
+  object-fit: cover; display: block;
+  opacity: 0.55; mix-blend-mode: luminosity;
+}
+.cov-img-wrap .fallback {
+  position: absolute; inset: 0;
+  background: linear-gradient(145deg, #4a1f30 0%, #251018 100%);
+  display: flex; align-items: center; justify-content: center;
+}
+.fallback svg { opacity: 0.2; }
 
-/* ── DEDICATION ── */
-.ded-page{display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fdf8f0 !important;text-align:center;padding:14%;position:relative;overflow:hidden;}
-.ded-page::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,rgba(140,100,50,0.04) 0%,transparent 60%);}
-.ded-q{font-family:'Playfair Display',serif;font-style:italic;font-size:clamp(11px,1.5vw,18px);color:#4a3f30;line-height:2;margin-bottom:18px;position:relative;z-index:1;}
-.ded-a{font-family:'EB Garamond',serif;font-size:clamp(9px,1vw,12px);letter-spacing:0.22em;color:#9a8a78;position:relative;z-index:1;}
+.cov-eyebrow {
+  font-family: 'Cormorant Upright', serif; font-weight: 300;
+  font-size: clamp(7px, 0.8vw, 10px);
+  letter-spacing: 0.48em; text-transform: uppercase;
+  color: #d4a8b8; opacity: 0.65; margin-bottom: 8px;
+}
+.cov-title {
+  font-family: 'Playfair Display', serif;
+  font-style: italic; font-weight: 400;
+  font-size: clamp(20px, 3vw, 38px);
+  color: #f5e8ee; line-height: 1.05;
+  text-shadow: 0 2px 20px rgba(0,0,0,0.6);
+}
+.cov-rule {
+  width: 48%; height: 1px; margin: 10px auto;
+  background: linear-gradient(to right, transparent, rgba(210,168,185,0.55), transparent);
+}
+.cov-author {
+  font-family: 'EB Garamond', serif; font-style: italic;
+  font-size: clamp(9px, 1.1vw, 13px);
+  color: #d4a8b8; opacity: 0.7; letter-spacing: 0.12em;
+}
 
-/* ── POEM PAGES ── */
-.poem-page{display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fdf8f0 !important;position:relative;overflow:hidden;}
-.poem-page::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 70% 50% at 15% 15%,rgba(170,130,70,0.05) 0%,transparent 100%),radial-gradient(ellipse 60% 60% at 85% 85%,rgba(130,90,40,0.04) 0%,transparent 100%);pointer-events:none;}
-.poem-inner{position:relative;z-index:1;width:78%;text-align:center;display:flex;flex-direction:column;align-items:center;}
-.poem-numeral{font-family:'Cormorant Upright',serif;font-weight:300;font-size:clamp(7px,0.78vw,9px);letter-spacing:0.45em;text-transform:uppercase;color:#8b2020;opacity:0.55;margin-bottom:7px;}
-.poem-title{font-family:'Playfair Display',serif;font-style:italic;font-weight:400;font-size:clamp(14px,1.9vw,23px);color:#1a1209;line-height:1.2;margin-bottom:11px;}
-.poem-ornament{color:#8b2020;font-size:clamp(9px,0.9vw,12px);opacity:0.3;letter-spacing:0.7em;margin-bottom:13px;}
-.poem-body{font-family:'EB Garamond',serif;font-style:italic;font-size:clamp(11px,1.3vw,16px);color:#4a3f30;line-height:2.05;text-align:center;}
-.poem-body p{min-height:1.1em;}
-.page-num{position:absolute;bottom:5%;width:100%;text-align:center;font-family:'Cormorant Upright',serif;font-weight:300;font-size:clamp(7px,0.75vw,9px);letter-spacing:0.35em;color:#9a8a78;opacity:0.4;z-index:1;}
+/* ─────────────────────────────────────────────
+   BACK OF FRONT COVER (inner dark left page)
+───────────────────────────────────────────── */
+.inner-dark {
+  background: linear-gradient(140deg, #2e1220 0%, #1e0e18 100%) !important;
+  display: flex; align-items: flex-end; justify-content: flex-end;
+  padding: 9%; overflow: hidden;
+}
+.inner-dark span {
+  font-family: 'EB Garamond', serif; font-style: italic;
+  font-size: clamp(7px, 0.72vw, 9px);
+  letter-spacing: 0.16em; color: rgba(210,168,185,0.18);
+  writing-mode: vertical-rl;
+}
 
-/* ── BACK COVER ── */
-.back-cover{background:#1c1008 !important;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:13%;}
-.back-cover::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 60% 30%,rgba(60,35,10,0.5) 0%,transparent 55%),radial-gradient(ellipse at 30% 70%,rgba(30,15,4,0.5) 0%,transparent 55%),repeating-linear-gradient(135deg,transparent 0px,transparent 3px,rgba(255,255,255,0.01) 3px,rgba(255,255,255,0.01) 4px),linear-gradient(160deg,#221408 0%,#180e06 100%);}
-.back-cover::after{content:"";position:absolute;inset:4.5%;border:1px solid rgba(195,160,100,0.3);pointer-events:none;z-index:2;}
-.bc-frame2{position:absolute;inset:6%;z-index:2;pointer-events:none;border:1px solid rgba(195,160,100,0.1);}
-.spine-r{position:absolute;top:0;right:0;width:12px;height:100%;background:linear-gradient(to left,rgba(0,0,0,0.8),rgba(0,0,0,0.1),transparent);z-index:5;pointer-events:none;}
-.bc-corner{position:absolute;width:22px;height:22px;border-style:solid;border-color:rgba(195,160,100,0.45);z-index:4;}
-.bcc-tl{top:4%;left:4%;border-width:1.5px 0 0 1.5px;}
-.bcc-tr{top:4%;right:4%;border-width:1.5px 1.5px 0 0;}
-.bcc-bl{bottom:4%;left:4%;border-width:0 0 1.5px 1.5px;}
-.bcc-br{bottom:4%;right:4%;border-width:0 1.5px 1.5px 0;}
-.bc-content{position:relative;z-index:3;text-align:center;}
-.bc-quote{font-family:'Playfair Display',serif;font-style:italic;font-size:clamp(10px,1.35vw,16px);color:rgba(240,228,208,0.6);line-height:1.9;margin-bottom:16px;}
-.bc-rule{width:30%;height:1px;margin:0 auto 14px;background:linear-gradient(to right,transparent,rgba(195,160,100,0.5),transparent);}
-.bc-author{font-family:'EB Garamond',serif;font-style:italic;font-size:clamp(8px,0.9vw,11px);letter-spacing:0.28em;color:#c8a86c;opacity:0.5;}
+/* ─────────────────────────────────────────────
+   PAPER PAGES — shared warm cream base
+───────────────────────────────────────────── */
+.paper {
+  background: #fdf5f0 !important;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  position: relative; overflow: hidden;
+}
+/* Warm vignette on every paper page */
+.paper::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 15%, rgba(180,120,130,0.045) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 70% at 80% 85%, rgba(150,90,100,0.035) 0%, transparent 55%),
+    radial-gradient(ellipse 100% 100% at 50% 50%, transparent 60%, rgba(0,0,0,0.04) 100%);
+}
 
-/* ── NAV BAR ── */
-.nav-bar{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:200;display:flex;align-items:center;background:rgba(16,10,4,0.82);border:1px solid rgba(195,160,100,0.2);border-radius:100px;overflow:hidden;backdrop-filter:blur(20px);box-shadow:0 6px 28px rgba(0,0,0,0.6);}
-.nav-btn{background:none;border:none;color:rgba(195,160,100,0.6);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:12px 22px;font-size:14px;transition:all .18s;line-height:1;}
-.nav-btn:hover{color:#c8a86c;background:rgba(195,160,100,0.07);}
-.nav-btn:active{transform:scale(0.85);}
-.nav-btn.off{opacity:0.15;pointer-events:none;}
-.nav-sep{width:1px;height:16px;background:rgba(195,160,100,0.12);}
-.nav-label{font-family:'Cormorant Upright',serif;font-weight:300;font-size:10px;letter-spacing:0.22em;color:rgba(195,160,100,0.35);padding:0 18px;min-width:72px;text-align:center;user-select:none;}
-.key-hint{position:fixed;bottom:72px;left:50%;transform:translateX(-50%);font-family:'Cormorant Upright',serif;font-size:9px;letter-spacing:0.22em;color:rgba(195,160,100,0.18);text-transform:uppercase;white-space:nowrap;z-index:200;animation:kh 6s ease 3s both;pointer-events:none;}
-@keyframes kh{0%{opacity:0;}15%{opacity:1;}75%{opacity:1;}100%{opacity:0;}}
-@media(max-width:640px){.key-hint{display:none;}}
+/* ─────────────────────────────────────────────
+   TITLE PAGE
+───────────────────────────────────────────── */
+.title-page {
+  text-align: center; padding: 11%;
+}
+.tp-line {
+  width: 1px; margin: 0 auto;
+  background: linear-gradient(to bottom, transparent, #7a2a40);
+}
+.tp-line.bot {
+  background: linear-gradient(to bottom, #7a2a40, transparent);
+}
+.tp-eye {
+  font-family: 'Cormorant Upright', serif; font-weight: 300;
+  font-size: clamp(7px, 0.78vw, 9px);
+  letter-spacing: 0.5em; text-transform: uppercase;
+  color: #a08090; margin-bottom: 13px; position: relative; z-index: 1;
+}
+.tp-title {
+  font-family: 'Playfair Display', serif;
+  font-style: italic; font-weight: 400;
+  font-size: clamp(26px, 4vw, 50px);
+  color: #1a0e14; line-height: 1.0;
+  margin-bottom: 8px; position: relative; z-index: 1;
+}
+.tp-sub {
+  font-family: 'EB Garamond', serif; font-style: italic;
+  font-size: clamp(10px, 1.1vw, 13px); color: #6e5060;
+  margin-bottom: 18px; position: relative; z-index: 1;
+}
+.tp-rule {
+  width: 30%; height: 1px; margin: 0 auto 16px;
+  background: linear-gradient(to right, transparent, rgba(122,42,64,0.25), transparent);
+  position: relative; z-index: 1;
+}
+.tp-author {
+  font-family: 'EB Garamond', serif;
+  font-size: clamp(10px, 1.1vw, 13px);
+  color: #4a3040; letter-spacing: 0.1em;
+  position: relative; z-index: 1;
+}
+
+/* ─────────────────────────────────────────────
+   DEDICATION PAGE
+───────────────────────────────────────────── */
+.ded-page { padding: 14%; text-align: center; }
+.ded-q {
+  font-family: 'Playfair Display', serif; font-style: italic;
+  font-size: clamp(11px, 1.45vw, 17px);
+  color: #4a3040; line-height: 2; margin-bottom: 18px;
+  position: relative; z-index: 1;
+}
+.ded-attr {
+  font-family: 'EB Garamond', serif;
+  font-size: clamp(9px, 1vw, 12px);
+  letter-spacing: 0.22em; color: #a08090;
+  position: relative; z-index: 1;
+}
+
+/* ─────────────────────────────────────────────
+   POEM PAGES
+───────────────────────────────────────────── */
+.poem-page { padding: 8% 10%; }
+.poem-inner {
+  position: relative; z-index: 1;
+  width: 80%; text-align: center;
+  display: flex; flex-direction: column; align-items: center;
+}
+.poem-roman {
+  font-family: 'Cormorant Upright', serif; font-weight: 300;
+  font-size: clamp(7px, 0.75vw, 9px);
+  letter-spacing: 0.45em; text-transform: uppercase;
+  color: #7a2a40; opacity: 0.5; margin-bottom: 8px;
+}
+.poem-title {
+  font-family: 'Playfair Display', serif;
+  font-style: italic; font-weight: 400;
+  font-size: clamp(15px, 1.85vw, 22px);
+  color: #1a0e14; line-height: 1.2; margin-bottom: 12px;
+}
+.poem-orn {
+  color: #7a2a40; opacity: 0.3;
+  font-size: clamp(9px, 0.85vw, 11px);
+  letter-spacing: 0.65em; margin-bottom: 14px;
+}
+.poem-body {
+  font-family: 'EB Garamond', serif; font-style: italic;
+  font-size: clamp(11.5px, 1.28vw, 16px);
+  color: #4a3040; line-height: 2.1; text-align: center;
+}
+.poem-body p { min-height: 1.1em; }
+.pgnum {
+  position: absolute; bottom: 5%; width: 100%; text-align: center;
+  font-family: 'Cormorant Upright', serif; font-weight: 300;
+  font-size: clamp(7px, 0.72vw, 9px);
+  letter-spacing: 0.35em; color: #a08090; opacity: 0.4; z-index: 1;
+}
+
+/* ─────────────────────────────────────────────
+   BACK COVER — rounded right corners
+───────────────────────────────────────────── */
+.back-cover {
+  border-radius: 0 10px 10px 0;
+  overflow: hidden;
+  position: relative;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 13%;
+}
+.back-cover::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit;
+  background:
+    radial-gradient(ellipse at 55% 30%, rgba(100,40,60,0.5) 0%, transparent 55%),
+    radial-gradient(ellipse at 30% 70%, rgba(50,15,30,0.5) 0%, transparent 55%),
+    repeating-linear-gradient(128deg, transparent 0, transparent 4px, rgba(255,255,255,0.012) 4px, rgba(255,255,255,0.012) 5px),
+    linear-gradient(155deg, #361422 0%, #1e0e18 100%);
+}
+.back-cover::after {
+  content: ""; position: absolute; inset: 4.5%;
+  border: 1px solid rgba(210,170,150,0.22);
+  border-radius: 2px; pointer-events: none; z-index: 2;
+}
+.back-cover .spine-r {
+  position: absolute; top: 0; right: 0; width: 14px; height: 100%;
+  background: linear-gradient(to left, rgba(0,0,0,0.75), rgba(0,0,0,0.08), transparent);
+  z-index: 5; border-radius: 0 10px 10px 0; pointer-events: none;
+}
+.back-cover .bc-cn {
+  position: absolute; width: 20px; height: 20px;
+  border-color: rgba(210,170,150,0.4); border-style: solid; z-index: 4;
+}
+.bc-cn.tl { top: 4%;   left: 4%;   border-width: 1.5px 0 0 1.5px; }
+.bc-cn.tr { top: 4%;   right: 4%;  border-width: 1.5px 1.5px 0 0; }
+.bc-cn.bl { bottom: 4%; left: 4%;  border-width: 0 0 1.5px 1.5px; }
+.bc-cn.br { bottom: 4%; right: 4%; border-width: 0 1.5px 1.5px 0; }
+.bc-body { position: relative; z-index: 3; text-align: center; }
+.bc-quote {
+  font-family: 'Playfair Display', serif; font-style: italic;
+  font-size: clamp(10px, 1.3vw, 15px);
+  color: rgba(245,232,238,0.58); line-height: 1.9; margin-bottom: 16px;
+}
+.bc-rule {
+  width: 28%; height: 1px; margin: 0 auto 14px;
+  background: linear-gradient(to right, transparent, rgba(210,168,185,0.4), transparent);
+}
+.bc-author {
+  font-family: 'EB Garamond', serif; font-style: italic;
+  font-size: clamp(8px, 0.88vw, 11px);
+  letter-spacing: 0.28em; color: #d4a8b8; opacity: 0.45;
+}
+
+/* ─────────────────────────────────────────────
+   NAVIGATION
+───────────────────────────────────────────── */
+.nav {
+  position: fixed; bottom: 24px; left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
+  display: flex; align-items: center;
+  background: rgba(18, 8, 14, 0.82);
+  border: 1px solid rgba(210,168,185,0.18);
+  border-radius: 100px;
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.55);
+  overflow: hidden;
+}
+.nb {
+  background: none; border: none;
+  color: rgba(210,168,185,0.6); cursor: pointer;
+  padding: 12px 22px; font-size: 15px;
+  transition: color .18s, background .18s;
+  display: flex; align-items: center; justify-content: center;
+  line-height: 1;
+}
+.nb:hover  { color: #d4a8b8; background: rgba(210,168,185,0.07); }
+.nb:active { transform: scale(0.86); }
+.nb.off    { opacity: 0.15; pointer-events: none; }
+.ndiv { width: 1px; height: 16px; background: rgba(210,168,185,0.12); }
+.nlbl {
+  font-family: 'Cormorant Upright', serif; font-weight: 300;
+  font-size: 10px; letter-spacing: 0.22em;
+  color: rgba(210,168,185,0.32);
+  padding: 0 18px; min-width: 68px; text-align: center;
+  user-select: none;
+}
+.keyhint {
+  position: fixed; bottom: 70px; left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Cormorant Upright', serif; font-size: 9px;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  color: rgba(210,168,185,0.15); white-space: nowrap;
+  z-index: 200; pointer-events: none;
+  animation: kfade 6s ease 2.8s both;
+}
+@keyframes kfade { 0%{opacity:0} 15%{opacity:1} 75%{opacity:1} 100%{opacity:0} }
+@media (max-width:640px) { .keyhint { display: none; } }
+
 </style>
 </head>
 <body>
 
-<!-- Loading screen -->
-<div id="loading">
-  <p class="loading-title">Opening the book…</p>
-  <div class="loading-dots">
-    <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+<div class="bg"></div>
+
+<div class="scene">
+  <div class="book-wrap">
+    <div class="book-shadow"></div>
+    <div id="flipbook"></div>
   </div>
 </div>
 
-
-<div class="scene">
-<div class="book-wrap">
-<div id="flipbook">
-  <!-- Pages are injected here by JavaScript -->
+<div class="nav" id="nav">
+  <button class="nb off" id="btnPrev" onclick="prevPage()">&#8592;</button>
+  <div class="ndiv"></div>
+  <span class="nlbl" id="nlbl">&nbsp;</span>
+  <div class="ndiv"></div>
+  <button class="nb" id="btnNext" onclick="nextPage()">&#8594;</button>
 </div>
-</div>
-</div>
-
-<div class="nav-bar" id="navBar" style="display:none">
-  <button class="nav-btn off" id="btnPrev" onclick="prevPage()">&#8592;</button>
-  <div class="nav-sep"></div>
-  <span class="nav-label" id="navLabel">&nbsp;</span>
-  <div class="nav-sep"></div>
-  <button class="nav-btn" id="btnNext" onclick="nextPage()">&#8594;</button>
-</div>
-<p class="key-hint" id="keyHint" style="display:none">Use ← → arrow keys to turn pages</p>
+<p class="keyhint">← → arrow keys to turn pages</p>
 
 <script src="jquery.js"></script>
 <script src="turn.js"></script>
 <script>
-/* ============================================================
-   CONFIGURATION — edit these if needed
-   ============================================================ */
-var CONFIG = {
-  bookTitle:  "Verses",             /* ✏️ Book title */
-  bookSub:    "a poetry collection",/* ✏️ Subtitle on title page */
-  authorName: "Your Name",          /* ✏️ Author name */
-  coverImage: "images/cover.jpg",   /* ✏️ Cover image path */
-  dedication: "In her words, I found a country<br>I did not know I was homesick for.", /* ✏️ Dedication quote */
-  dedAttr:    "— for you, always",  /* ✏️ Dedication attribution */
-  backQuote:  "She is a poem herself —<br>the kind that changes meaning<br>each time you read it.", /* ✏️ Back cover quote */
+/* ═══════════════════════════════════════════════════════
+   CONFIG  ✏️  Edit these to customise the book
+═══════════════════════════════════════════════════════ */
+var CFG = {
+  title:      "Verses",
+  subtitle:   "a poetry collection",
+  author:     "Your Name",
+  cover:      "images/cover.jpg",
+  dedication: "In her words, I found a country<br>I did not know I was homesick for.",
+  dedAttr:    "— for you, always",
+  backQuote:  "She is a poem herself —<br>the kind that changes meaning<br>each time you read it."
 };
 
-/* ============================================================
-   ROMAN NUMERALS helper
-   ============================================================ */
-function toRoman(n){
-  var v=[1000,900,500,400,100,90,50,40,10,9,5,4,1];
-  var s=["M","CM","D","CD","C","XC","L","XL","X","IX","V","IV","I"];
-  var r="";
-  for(var i=0;i<v.length;i++) while(n>=v[i]){r+=s[i];n-=v[i];}
-  return r;
-}
+/* ═══════════════════════════════════════════════════════
+   POEMS  ✏️  Replace with real poems
+   Each poem: { title: "...", lines: ["line", "", "stanza break = empty string"] }
 
-/* ============================================================
-   BUILD A POEM PAGE
-   ============================================================ */
-function buildPoemPage(poem, index){
-  var linesHtml = poem.lines.map(function(l){
-    return '<p>' + (l.trim() === '' ? '' : escHtml(l)) + '</p>';
-  }).join('');
-
-  return '<div class="page poem-page">'
-    + '<div class="poem-inner">'
-    + '<p class="poem-numeral">' + toRoman(index) + '</p>'
-    + '<h2 class="poem-title">' + escHtml(poem.title) + '</h2>'
-    + '<p class="poem-ornament">&#10022; &#10022; &#10022;</p>'
-    + '<div class="poem-body">' + linesHtml + '</div>'
-    + '</div>'
-    + '<p class="page-num">' + index + '</p>'
-    + '</div>';
-}
-
-function escHtml(s){
-  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-}
-
-/* ============================================================
-   BUILD STATIC PAGES (covers, title, dedication, back)
-   ============================================================ */
-function buildCover(){
-  return '<div class="hard front-cover">'
-    + '<div class="fc-bg"></div>'
-    + '<div class="fc-frame"></div><div class="fc-frame2"></div>'
-    + '<div class="corner c-tl"></div><div class="corner c-tr"></div>'
-    + '<div class="corner c-bl"></div><div class="corner c-br"></div>'
-    + '<div class="spine-l"></div>'
-    + '<div class="fc-content">'
-    +   '<div class="cover-img-box">'
-    +     '<img src="' + CONFIG.coverImage + '" alt="" onerror="this.style.display=\'none\'"/>'
-    +     '<div class="img-fallback">'
-    +       '<svg class="fallback-svg" width="110" height="140" viewBox="0 0 110 140" fill="none">'
-    +         '<rect x="8" y="8" width="94" height="124" rx="1" stroke="#c8a86c" stroke-width="0.5"/>'
-    +         '<line x1="22" y1="35" x2="88" y2="35" stroke="#c8a86c" stroke-width="0.4"/>'
-    +         '<line x1="22" y1="48" x2="88" y2="48" stroke="#c8a86c" stroke-width="0.4"/>'
-    +         '<line x1="22" y1="61" x2="70" y2="61" stroke="#c8a86c" stroke-width="0.4"/>'
-    +         '<line x1="22" y1="82" x2="88" y2="82" stroke="#c8a86c" stroke-width="0.4"/>'
-    +         '<line x1="22" y1="95" x2="78" y2="95" stroke="#c8a86c" stroke-width="0.4"/>'
-    +         '<line x1="22" y1="108" x2="65" y2="108" stroke="#c8a86c" stroke-width="0.4"/>'
-    +         '<circle cx="55" cy="22" r="9" stroke="#c8a86c" stroke-width="0.4"/>'
-    +       '</svg>'
-    +     '</div>'
-    +   '</div>'
-    +   '<p class="cv-eyebrow">A Collection of Poems</p>'
-    +   '<h1 class="cv-title">' + escHtml(CONFIG.bookTitle) + '</h1>'
-    +   '<div class="cv-rule"></div>'
-    +   '<p class="cv-author">' + escHtml(CONFIG.authorName) + '</p>'
-    + '</div>'
-    + '</div>';
-}
-
-function buildBackOfFront(){
-  return '<div class="hard cvr-dark"><span>' + escHtml(CONFIG.bookTitle) + ' &nbsp;·&nbsp; A Poetry Collection</span></div>';
-}
-
-function buildTitlePage(){
-  return '<div class="page title-page">'
-    + '<div class="tp-vline-t" style="height:clamp(22px,4vh,42px)"></div>'
-    + '<p class="tp-eye">A Collection of Poems</p>'
-    + '<h1 class="tp-ttl">' + escHtml(CONFIG.bookTitle) + '</h1>'
-    + '<p class="tp-sub">' + escHtml(CONFIG.bookSub) + '</p>'
-    + '<div class="tp-rule"></div>'
-    + '<p class="tp-auth">' + escHtml(CONFIG.authorName) + '</p>'
-    + '<div class="tp-vline-b" style="height:clamp(22px,4vh,42px)"></div>'
-    + '</div>';
-}
-
-function buildDedication(){
-  return '<div class="page ded-page">'
-    + '<p class="ded-q">' + CONFIG.dedication + '</p>'
-    + '<p class="ded-a">' + escHtml(CONFIG.dedAttr) + '</p>'
-    + '</div>';
-}
-
-function buildBackInner(){
-  return '<div class="hard cvr-dark" style="align-items:flex-start;justify-content:flex-start;"><span>' + escHtml(CONFIG.bookTitle) + ' &nbsp;·&nbsp; A Poetry Collection</span></div>';
-}
-
-function buildBackCover(){
-  return '<div class="hard back-cover">'
-    + '<div class="bc-frame2"></div>'
-    + '<div class="bc-corner bcc-tl"></div><div class="bc-corner bcc-tr"></div>'
-    + '<div class="bc-corner bcc-bl"></div><div class="bc-corner bcc-br"></div>'
-    + '<div class="spine-r"></div>'
-    + '<div class="bc-content">'
-    +   '<p class="bc-quote">' + CONFIG.backQuote + '</p>'
-    +   '<div class="bc-rule"></div>'
-    +   '<p class="bc-author">' + escHtml(CONFIG.authorName) + '</p>'
-    + '</div>'
-    + '</div>';
-}
-
-/* ============================================================
-   INITIALISE TURN.JS
-   ============================================================ */
-function initBook(){
-  var W = window.innerWidth, H = window.innerHeight;
-  var mobile = W < 700;
-
-  /* ── Integer pixel dimensions — prevents subpixel rendering tears ── */
-  var pageH, pageW;
-  if(mobile){
-    pageH = Math.floor(Math.min(H * 0.76, 560));
-    pageW = Math.floor(pageH / 1.414);
-    if(pageW > Math.floor(W * 0.92)){ pageW = Math.floor(W * 0.92); pageH = Math.floor(pageW * 1.414); }
-  } else {
-    pageH = Math.floor(Math.min(H * 0.80, 620));
-    pageW = Math.floor(pageH / 1.414);
-    if(pageW * 2 > Math.floor(W * 0.86)){ pageW = Math.floor((W * 0.86) / 2); pageH = Math.floor(pageW * 1.414); }
-  }
-  /* Both dimensions must be even numbers — turn.js requirement */
-  if(pageW % 2 !== 0) pageW -= 1;
-  if(pageH % 2 !== 0) pageH -= 1;
-  var bookW = mobile ? pageW : pageW * 2;
-
-  /* ── turn.js needs total page count to be EVEN for double display ──
-     Pages: 1 front cover + 1 back-of-front + 1 title + 1 dedication
-            + N poems + 1 back-inner + 1 back cover
-     = N + 6. We pad with a blank page if needed to make it even. */
-  var totalPages = POEMS.length + 6;
-  if(!mobile && totalPages % 2 !== 0){
-    var blank = document.createElement('div');
-    blank.className = 'page poem-page';
-    blank.innerHTML = '<div class="poem-inner"></div>';
-    document.getElementById('flipbook').appendChild(blank);
-  }
-
-  /* ── Apply explicit pixel size to every child so turn.js gets clean numbers ── */
-  $('#flipbook').css({ width: bookW, height: pageH, overflow: 'visible' });
-  $('#flipbook').children().css({ width: pageW, height: pageH });
-
-  $('#flipbook').turn({
-    width:        bookW,
-    height:       pageH,
-    autoCenter:   true,
-    display:      mobile ? 'single' : 'double',
-    acceleration: false,   /* false = no GPU glitch / white flash */
-    gradients:    true,
-    elevation:    50,
-    duration:     800,
-    when:{
-      turning: function(e, p){ updateNav(p); },
-      turned:  function(e, p){ updateNav(p); }
-    }
-  });
-
-  updateNav(1);
-  $('#loading').addClass('hide');
-  setTimeout(function(){ $('#loading').hide(); }, 700);
-  $('#navBar').show();
-  $('#keyHint').show();
-
-  /* ── Keyboard ── */
-  $(document).off('keydown.book').on('keydown.book', function(e){
-    if(e.keyCode === 37) prevPage();
-    if(e.keyCode === 39) nextPage();
-  });
-
-  /* ── Touch swipe — only horizontal, no scroll interference ── */
-  var tx = 0, ty = 0, swiping = false;
-  var el = document.getElementById('flipbook');
-  el.addEventListener('touchstart', function(e){
-    tx = e.touches[0].clientX;
-    ty = e.touches[0].clientY;
-    swiping = false;
-  }, { passive: true });
-  el.addEventListener('touchmove', function(e){
-    var dx = Math.abs(e.touches[0].clientX - tx);
-    var dy = Math.abs(e.touches[0].clientY - ty);
-    if(dx > dy && dx > 10) swiping = true;
-  }, { passive: true });
-  el.addEventListener('touchend', function(e){
-    if(!swiping) return;
-    var dx = e.changedTouches[0].clientX - tx;
-    if(Math.abs(dx) > 40){ dx < 0 ? nextPage() : prevPage(); }
-  }, { passive: true });
-}
-
-function prevPage(){ $('#flipbook').turn('previous'); }
-function nextPage(){ $('#flipbook').turn('next'); }
-function updateNav(page){
-  var total=$('#flipbook').turn('pages');
-  $('#navLabel').text(page+' / '+total);
-  $('#btnPrev').toggleClass('off',page<=1);
-  $('#btnNext').toggleClass('off',page>=total);
-}
-
-/* ============================================================
-   POEMS DATA
-   ✏️  Replace these with your actual poems.
-   Each poem: { title: "...", lines: ["line1", "line2", "", "stanza break = empty string"] }
-
-   TO ADD MORE POEMS: copy one { title:..., lines:[...] } block,
-   paste it at the end of the array (before the ] ), add a comma after the one above it.
-   ============================================================ */
+   TO ADD MORE: copy a { } block, paste inside the array, separate with a comma.
+═══════════════════════════════════════════════════════ */
 var POEMS = [
   {
     title: "Morning Light",
@@ -587,24 +623,191 @@ var POEMS = [
   }
 ];
 
-/* ============================================================
-   MAIN — build and launch the book
-   ============================================================ */
-function loadBook(){
-  var html = '';
-  html += buildCover();
-  html += buildBackOfFront();
-  html += buildTitlePage();
-  html += buildDedication();
-  POEMS.forEach(function(poem, i){ html += buildPoemPage(poem, i+1); });
-  html += buildBackInner();
-  html += buildBackCover();
-  document.getElementById('flipbook').innerHTML = html;
-  initBook();
+/* ═══════════════════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════════════════ */
+function roman(n){
+  var v=[1000,900,500,400,100,90,50,40,10,9,5,4,1];
+  var s=["M","CM","D","CD","C","XC","L","XL","X","IX","V","IV","I"];
+  var r=""; for(var i=0;i<v.length;i++) while(n>=v[i]){r+=s[i];n-=v[i];} return r;
+}
+function esc(s){
+  return String(s)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
 
-/* Start */
-document.addEventListener('DOMContentLoaded', loadBook);
+/* ═══════════════════════════════════════════════════════
+   PAGE BUILDERS
+═══════════════════════════════════════════════════════ */
+function frontCover(){
+  return '<div class="hard front-cover">'
+    +'<div class="spine"></div>'
+    +'<div class="inner-frame"></div>'
+    +'<div class="cn tl"></div><div class="cn tr"></div>'
+    +'<div class="cn bl"></div><div class="cn br"></div>'
+    +'<div class="fc-body">'
+    +  '<div class="cov-img-wrap">'
+    +    '<img src="'+CFG.cover+'" alt="" onerror="this.style.display=\'none\'"/>'
+    +    '<div class="fallback">'
+    +      '<svg width="100" height="130" viewBox="0 0 100 130" fill="none">'
+    +        '<rect x="6" y="6" width="88" height="118" rx="1" stroke="#d4a8b8" stroke-width="0.5"/>'
+    +        '<line x1="18" y1="32" x2="82" y2="32" stroke="#d4a8b8" stroke-width="0.4"/>'
+    +        '<line x1="18" y1="44" x2="82" y2="44" stroke="#d4a8b8" stroke-width="0.4"/>'
+    +        '<line x1="18" y1="56" x2="65" y2="56" stroke="#d4a8b8" stroke-width="0.4"/>'
+    +        '<line x1="18" y1="76" x2="82" y2="76" stroke="#d4a8b8" stroke-width="0.4"/>'
+    +        '<line x1="18" y1="88" x2="72" y2="88" stroke="#d4a8b8" stroke-width="0.4"/>'
+    +        '<line x1="18" y1="100" x2="60" y2="100" stroke="#d4a8b8" stroke-width="0.4"/>'
+    +        '<circle cx="50" cy="20" r="8" stroke="#d4a8b8" stroke-width="0.4"/>'
+    +      '</svg>'
+    +    '</div>'
+    +  '</div>'
+    +  '<p class="cov-eyebrow">A Collection of Poems</p>'
+    +  '<h1 class="cov-title">'+esc(CFG.title)+'</h1>'
+    +  '<div class="cov-rule"></div>'
+    +  '<p class="cov-author">'+esc(CFG.author)+'</p>'
+    +'</div>'
+    +'</div>';
+}
+
+function backOfFront(){
+  return '<div class="hard inner-dark"><span>'+esc(CFG.title)+' &nbsp;·&nbsp; A Poetry Collection</span></div>';
+}
+
+function titlePage(){
+  return '<div class="page paper title-page">'
+    +'<div class="tp-line" style="height:clamp(20px,3.8vh,40px);margin-bottom:16px"></div>'
+    +'<p class="tp-eye">A Collection of Poems</p>'
+    +'<h1 class="tp-title">'+esc(CFG.title)+'</h1>'
+    +'<p class="tp-sub">'+esc(CFG.subtitle)+'</p>'
+    +'<div class="tp-rule"></div>'
+    +'<p class="tp-author">'+esc(CFG.author)+'</p>'
+    +'<div class="tp-line bot" style="height:clamp(20px,3.8vh,40px);margin-top:16px"></div>'
+    +'</div>';
+}
+
+function dedPage(){
+  return '<div class="page paper ded-page">'
+    +'<p class="ded-q">'+CFG.dedication+'</p>'
+    +'<p class="ded-attr">'+esc(CFG.dedAttr)+'</p>'
+    +'</div>';
+}
+
+function poemPage(poem, idx){
+  var lines = poem.lines.map(function(l){
+    return '<p>'+(l.trim()==='' ? '' : esc(l))+'</p>';
+  }).join('');
+  return '<div class="page paper poem-page">'
+    +'<div class="poem-inner">'
+    +  '<p class="poem-roman">'+roman(idx)+'</p>'
+    +  '<h2 class="poem-title">'+esc(poem.title)+'</h2>'
+    +  '<p class="poem-orn">&#10022; &#10022; &#10022;</p>'
+    +  '<div class="poem-body">'+lines+'</div>'
+    +'</div>'
+    +'<p class="pgnum">'+idx+'</p>'
+    +'</div>';
+}
+
+function frontOfBack(){
+  return '<div class="hard inner-dark" style="align-items:flex-start;justify-content:flex-start;"><span>'+esc(CFG.title)+' &nbsp;·&nbsp; A Poetry Collection</span></div>';
+}
+
+function backCover(){
+  return '<div class="hard back-cover">'
+    +'<div class="spine-r"></div>'
+    +'<div class="bc-cn tl"></div><div class="bc-cn tr"></div>'
+    +'<div class="bc-cn bl"></div><div class="bc-cn br"></div>'
+    +'<div class="bc-body">'
+    +  '<p class="bc-quote">'+CFG.backQuote+'</p>'
+    +  '<div class="bc-rule"></div>'
+    +  '<p class="bc-author">'+esc(CFG.author)+'</p>'
+    +'</div>'
+    +'</div>';
+}
+
+/* ═══════════════════════════════════════════════════════
+   BUILD & INIT
+═══════════════════════════════════════════════════════ */
+function build(){
+  var html = frontCover() + backOfFront() + titlePage() + dedPage();
+  POEMS.forEach(function(p,i){ html += poemPage(p, i+1); });
+  html += frontOfBack() + backCover();
+  document.getElementById('flipbook').innerHTML = html;
+}
+
+function init(){
+  var W = window.innerWidth, H = window.innerHeight;
+  var mob = W < 680;
+
+  var pH, pW;
+  if(mob){
+    pH = Math.min(H * 0.74, 560);
+    pW = pH / 1.414;
+    if(pW > W * 0.88){ pW = W * 0.88; pH = pW * 1.414; }
+  } else {
+    pH = Math.min(H * 0.78, 620);
+    pW = pH / 1.414;
+    if(pW * 2 > W * 0.84){ pW = (W * 0.84) / 2; pH = pW * 1.414; }
+  }
+
+  var bW = mob ? pW : pW * 2;
+
+  /* Destroy previous instance if any */
+  if($('#flipbook').data().tpage !== undefined){
+    try{ $('#flipbook').turn('destroy'); } catch(e){}
+  }
+
+  $('#flipbook').turn({
+    width:        Math.round(bW),
+    height:       Math.round(pH),
+    autoCenter:   true,
+    display:      mob ? 'single' : 'double',
+    acceleration: true,
+    gradients:    true,
+    elevation:    50,
+    duration:     780,
+    when: {
+      turning: function(e,p){ updateNav(p); },
+      turned:  function(e,p){ updateNav(p); }
+    }
+  });
+
+  updateNav(1);
+
+  /* Keyboard */
+  $(document).off('keydown.book').on('keydown.book', function(e){
+    if(e.keyCode===37) prevPage();
+    if(e.keyCode===39) nextPage();
+  });
+
+  /* Touch swipe */
+  var tx=0, ty=0;
+  var el = document.getElementById('flipbook');
+  el.removeEventListener('touchstart', el._ts);
+  el.removeEventListener('touchend',   el._te);
+  el._ts = function(e){ tx=e.touches[0].clientX; ty=e.touches[0].clientY; };
+  el._te = function(e){
+    var dx=e.changedTouches[0].clientX-tx, dy=e.changedTouches[0].clientY-ty;
+    if(Math.abs(dx)>Math.abs(dy) && Math.abs(dx)>42){ dx<0?nextPage():prevPage(); }
+  };
+  el.addEventListener('touchstart', el._ts, {passive:true});
+  el.addEventListener('touchend',   el._te, {passive:true});
+}
+
+function prevPage(){ $('#flipbook').turn('previous'); }
+function nextPage(){ $('#flipbook').turn('next'); }
+function updateNav(p){
+  var t=$('#flipbook').turn('pages');
+  $('#nlbl').text(p+' / '+t);
+  $('#btnPrev').toggleClass('off', p<=1);
+  $('#btnNext').toggleClass('off', p>=t);
+}
+
+/* ─── Start ─── */
+$(function(){
+  build();
+  init();
+});
 </script>
 </body>
 </html>
