@@ -366,6 +366,11 @@ function build(){
 ══════════════════════════════════ */
 var PW=0, PH=0, MOB=false;
 
+function isSinglePage(idx){
+  // cover (0) and back cover (last) show as single page on desktop
+  return idx===0 || idx===S.length-1;
+}
+
 function size(){
   var W=window.innerWidth, H=window.innerHeight;
   MOB = W < 680;
@@ -377,20 +382,24 @@ function size(){
     if(PW*2>W*0.84){PW=(W*0.84)/2; PH=PW*1.414;}
   }
   PW=Math.round(PW); PH=Math.round(PH);
+  applySize(CUR);
+}
 
+function applySize(idx){
+  var single = MOB || isSinglePage(idx);
   var bk=document.getElementById('book');
-  bk.style.width  = (MOB?PW:PW*2)+'px';
+  bk.style.width  = (single ? PW : PW*2)+'px';
   bk.style.height = PH+'px';
 
   document.getElementById('pgL').style.cssText =
-    'width:'+PW+'px;height:'+PH+'px;display:'+(MOB?'none':'block')+';';
+    'width:'+PW+'px;height:'+PH+'px;display:'+(single?'none':'block')+';';
   document.getElementById('pgR').style.cssText =
     'width:'+PW+'px;height:'+PH+'px;';
 
   var sp=document.getElementById('spine');
   sp.style.left   = (PW-12)+'px';
   sp.style.height = PH+'px';
-  sp.style.display= MOB?'none':'block';
+  sp.style.display= single?'none':'block';
 }
 
 /* ══════════════════════════════════
@@ -400,8 +409,9 @@ var CUR = 0;
 
 function render(idx){
   var sp = S[idx];
-  if(MOB){
-    // mobile: show one page — cover shows L, rest show R
+  applySize(idx);
+  if(MOB || isSinglePage(idx)){
+    // single page view: cover = L face, back cover = R face, rest = R
     document.getElementById('pgR').innerHTML = (idx===0) ? sp.L : sp.R;
   } else {
     document.getElementById('pgL').innerHTML = sp.L;
@@ -418,7 +428,7 @@ function render(idx){
    no 3D, no preserve-3d, no backface.
 ══════════════════════════════════ */
 var BUSY = false;
-var DUR  = 420;  /* ms */
+var DUR  = 380;  /* ms */
 
 function go(dir){
   if(BUSY) return;
@@ -426,91 +436,27 @@ function go(dir){
   if(next < 0 || next >= S.length) return;
   BUSY = true;
 
-  var pgL = document.getElementById('pgL');
-  var pgR = document.getElementById('pgR');
-  var bk  = document.getElementById('book');
+  var bk = document.getElementById('book');
 
-  var curr = S[CUR];
-  var dest = S[next];
-
-  if(MOB){
-    /* ── Mobile: fade swap ── */
-    var el = pgR;
-    el.style.transition = 'none';
-    el.style.opacity    = '1';
-
-    // show outgoing page already set, just fade it out
-    el.style.transition = 'opacity '+DUR+'ms ease';
-    el.style.opacity    = '0';
-
-    setTimeout(function(){
-      CUR = next;
-      el.style.transition = 'none';
-      el.innerHTML = (CUR===0) ? S[CUR].L : S[CUR].R;
-      el.style.opacity = '0';
-      // force reflow
-      void el.offsetWidth;
-      el.style.transition = 'opacity '+(DUR*0.6)+'ms ease';
-      el.style.opacity    = '1';
-      setTimeout(function(){
-        el.style.transition=''; el.style.opacity='';
-        updateNav(); BUSY=false;
-      }, DUR*0.6+20);
-    }, DUR+10);
-    return;
-  }
-
-  /* ── Desktop: horizontal slide ──
-     We place an overlay div on top of the book
-     that slides out, revealing the new page underneath.
-  */
-  var W = PW * 2;
-  var overlay = document.createElement('div');
-  overlay.style.cssText =
-    'position:absolute;top:0;left:0;width:'+W+'px;height:'+PH+'px;'
-    +'display:flex;z-index:50;pointer-events:none;'
-    +'transform:translateX(0);'
-    +'will-change:transform;';
-
-  // overlay shows CURRENT spread
-  var oL = document.createElement('div');
-  oL.style.cssText = 'width:'+PW+'px;height:'+PH+'px;flex-shrink:0;overflow:hidden;';
-  oL.innerHTML = curr.L;
-
-  var oR = document.createElement('div');
-  oR.style.cssText = 'width:'+PW+'px;height:'+PH+'px;flex-shrink:0;overflow:hidden;';
-  oR.innerHTML = curr.R;
-
-  overlay.appendChild(oL);
-  overlay.appendChild(oR);
-  bk.appendChild(overlay);
-
-  // immediately render destination behind the overlay
-  pgL.innerHTML = dest.L;
-  pgR.innerHTML = dest.R;
-
-  // add a subtle shadow on the sliding edge
-  var edgeShadow = document.createElement('div');
-  edgeShadow.style.cssText =
-    'position:absolute;top:0;height:'+PH+'px;width:32px;z-index:51;pointer-events:none;'
-    +(dir>0
-      ? 'right:0;background:linear-gradient(to left,rgba(0,0,0,0.18) 0%,transparent 100%);'
-      : 'left:0;background:linear-gradient(to right,rgba(0,0,0,0.18) 0%,transparent 100%);');
-  overlay.appendChild(edgeShadow);
-
-  // force reflow so transition fires
-  void overlay.offsetWidth;
-
-  overlay.style.transition = 'transform '+DUR+'ms cubic-bezier(0.4, 0, 0.2, 1)';
-  overlay.style.transform  = 'translateX('+(dir > 0 ? -W : W)+'px)';
+  /* ── Fade out current book ── */
+  bk.style.transition = 'opacity '+DUR+'ms ease';
+  bk.style.opacity    = '0';
 
   setTimeout(function(){
-    bk.removeChild(overlay);
     CUR = next;
-    render(CUR);
-    updateNav();
-    BUSY = false;
-  }, DUR + 20);
+    render(CUR);           // swap content + resize book instantly while invisible
+    bk.style.transition = 'none';
+    bk.style.opacity    = '0';
+    void bk.offsetWidth;  // force reflow
+    bk.style.transition = 'opacity '+(DUR*0.7)+'ms ease';
+    bk.style.opacity    = '1';
+    setTimeout(function(){
+      bk.style.transition = '';
+      bk.style.opacity    = '';
+      updateNav();
+      BUSY = false;
+    }, DUR*0.7 + 20);
+  }, DUR + 10);
 }
 
 /* ══════════════════════════════════
