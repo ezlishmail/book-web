@@ -4,264 +4,209 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,400;1,600&family=EB+Garamond:ital,wght@0,400;1,400&family=Cormorant+Upright:wght@300;400&display=swap" rel="stylesheet">
-<title>Verses — A Poetry Collection</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,400&family=EB+Garamond:ital,wght@0,400;1,400&family=Cormorant+Upright:wght@300&display=swap" rel="stylesheet">
+<title>Verses</title>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 
 html,body{
   width:100%;height:100%;overflow:hidden;
-  overscroll-behavior:none;touch-action:none;
+  overscroll-behavior:none;
   font-family:'EB Garamond',Georgia,serif;
-  background:#0f1a14;
-}
-
-/* ══ BACKGROUND — deep forest green ══ */
-.bg{
-  position:fixed;inset:0;z-index:0;
-  background:
-    radial-gradient(ellipse 85% 55% at 50% -5%, rgba(80,140,90,0.10) 0%,transparent 55%),
-    radial-gradient(ellipse 50% 60% at 5% 95%,  rgba(40,80,50,0.20) 0%,transparent 55%),
-    radial-gradient(ellipse 50% 50% at 95% 5%,  rgba(30,65,40,0.16) 0%,transparent 55%),
-    linear-gradient(155deg,#131f16 0%,#0a1209 55%,#111b13 100%);
-}
-.bg::after{
-  content:"";position:absolute;top:-60px;left:50%;transform:translateX(-50%);
-  width:600px;height:400px;pointer-events:none;
-  background:radial-gradient(ellipse,rgba(100,160,110,0.055) 0%,transparent 60%);
-}
-
-/* ══ SCENE ══ */
-.scene{
-  position:relative;z-index:1;
-  width:100vw;height:100vh;
   display:flex;align-items:center;justify-content:center;
+  background:#0e0c18;
 }
 
-/* ══ BOOK SHELL ══ */
-.book-shell{
-  position:relative;
-  /* NO filter/shadow here — causes repaint */
+/* ── deep midnight blue background ── */
+body::before{
+  content:"";position:fixed;inset:0;z-index:0;
+  background:
+    radial-gradient(ellipse 75% 50% at 50% 0%, rgba(100,80,180,0.10) 0%,transparent 60%),
+    radial-gradient(ellipse 55% 65% at 5% 95%,  rgba(60,40,120,0.18) 0%,transparent 55%),
+    radial-gradient(ellipse 55% 55% at 95% 5%,  rgba(50,35,110,0.14) 0%,transparent 55%),
+    linear-gradient(155deg,#131228 0%,#0a0916 55%,#111020 100%);
 }
 
-/* Real shadow: separate div, never animates */
-.book-ground-shadow{
-  position:absolute;
-  bottom:-30px;left:6%;right:6%;height:44px;
-  background:radial-gradient(ellipse,rgba(0,0,0,0.55) 0%,transparent 68%);
-  z-index:0;pointer-events:none;
+/* ── BOOK WRAPPER ── */
+.shell{position:relative;z-index:1;}
+
+.shadow{
+  position:absolute;bottom:-20px;left:8%;right:8%;height:32px;
+  background:radial-gradient(ellipse,rgba(0,0,0,0.5) 0%,transparent 70%);
+  pointer-events:none;
 }
 
-/* ══ THE BOOK ══ */
+/* ── THE BOOK ── */
 #book{
   position:relative;
-  /* GPU composite */
-  transform:translateZ(0);
-  will-change:transform;
-  z-index:1;
   display:flex;
-  overflow:hidden;   /* clips pages neatly */
+  overflow:hidden;        /* clips the sliding pages */
+  border-radius:3px;
 }
 
-/* ══ SHARED PAGE ══ */
+/* ── EACH HALF PAGE ── */
 .pg{
   flex-shrink:0;
   position:relative;
   overflow:hidden;
 }
 
-/* ══ COVER TEXTURE ══ */
-.cover-texture{
-  width:100%;height:100%;
-  position:relative;
-  display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-  padding:8%;text-align:center;
+/* Spine center shadow — always on */
+.spine{
+  position:absolute;top:0;z-index:20;
+  width:24px;height:100%;
+  background:linear-gradient(to right,
+    rgba(0,0,0,0.06) 0%,
+    rgba(0,0,0,0.20) 40%,
+    rgba(0,0,0,0.20) 60%,
+    rgba(0,0,0,0.06) 100%);
+  pointer-events:none;
+}
+
+/* ═══════════════════════════════
+   PAGE TURN — sliding panel
+   The outgoing page slides out,
+   the incoming page slides in.
+   That's it. Reliable everywhere.
+═══════════════════════════════ */
+.pg{transition:none;}  /* default no transition */
+
+/* ═══════════════════════════════
+   COVER
+═══════════════════════════════ */
+.cover-face{
+  width:100%;height:100%;position:relative;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:9%;text-align:center;
   background:
-    radial-gradient(ellipse at 38% 30%,rgba(60,110,65,0.45) 0%,transparent 55%),
-    radial-gradient(ellipse at 62% 70%,rgba(20,50,25,0.55) 0%,transparent 55%),
-    repeating-linear-gradient(122deg,transparent 0,transparent 4px,rgba(255,255,255,0.013) 4px,rgba(255,255,255,0.013) 5px),
-    linear-gradient(150deg,#1e3822 0%,#0f2012 55%,#1a3018 100%);
+    radial-gradient(ellipse at 35% 28%, rgba(100,80,160,0.45) 0%,transparent 55%),
+    radial-gradient(ellipse at 65% 72%, rgba(40,25,90,0.55)   0%,transparent 55%),
+    repeating-linear-gradient(122deg,transparent 0,transparent 5px,rgba(255,255,255,0.010) 5px,rgba(255,255,255,0.010) 6px),
+    linear-gradient(150deg,#22183e 0%,#130e28 55%,#1c1436 100%);
 }
-/* double border frame */
-.cover-texture::before{
-  content:"";position:absolute;inset:5%;
-  border:1px solid rgba(160,200,150,0.30);pointer-events:none;z-index:2;
-}
-.cover-texture::after{
-  content:"";position:absolute;inset:6.5%;
-  border:1px solid rgba(160,200,150,0.10);pointer-events:none;z-index:2;
-}
-/* corner brackets */
-.cn{position:absolute;width:18px;height:18px;border-style:solid;border-color:rgba(160,200,150,0.52);z-index:3;}
+.cover-face::before{content:"";position:absolute;inset:5%;border:1px solid rgba(180,160,230,0.28);pointer-events:none;}
+.cover-face::after {content:"";position:absolute;inset:6.5%;border:1px solid rgba(180,160,230,0.09);pointer-events:none;}
+.cn{position:absolute;width:17px;height:17px;border-style:solid;border-color:rgba(180,160,230,0.50);}
 .cn.tl{top:3.8%;left:3.8%;border-width:1.5px 0 0 1.5px;}
 .cn.tr{top:3.8%;right:3.8%;border-width:1.5px 1.5px 0 0;}
 .cn.bl{bottom:3.8%;left:3.8%;border-width:0 0 1.5px 1.5px;}
 .cn.br{bottom:3.8%;right:3.8%;border-width:0 1.5px 1.5px 0;}
-/* spine edge */
-.spine-l{position:absolute;top:0;left:0;width:13px;height:100%;background:linear-gradient(to right,rgba(0,0,0,0.68),rgba(0,0,0,0.05),transparent);z-index:5;pointer-events:none;}
-.spine-r{position:absolute;top:0;right:0;width:13px;height:100%;background:linear-gradient(to left,rgba(0,0,0,0.68),rgba(0,0,0,0.05),transparent);z-index:5;pointer-events:none;}
+.sp-l{position:absolute;top:0;left:0;width:12px;height:100%;background:linear-gradient(to right,rgba(0,0,0,0.60),transparent);pointer-events:none;}
+.sp-r{position:absolute;top:0;right:0;width:12px;height:100%;background:linear-gradient(to left,rgba(0,0,0,0.60),transparent);pointer-events:none;}
 
-/* ─ COVER IMAGE ─
-   ✏️  Set  CFG.cover = "yourfile.jpg"  in the script to show your image.
-*/
-.cov-img-box{
-  width:60%;aspect-ratio:3/4;
-  border:1px solid rgba(160,200,150,0.32);
-  box-shadow:0 5px 28px rgba(0,0,0,0.6),inset 0 0 20px rgba(0,0,0,0.4);
-  overflow:hidden;position:relative;
-  margin-bottom:6%;flex-shrink:0;z-index:1;
+.cov-img{
+  width:56%;aspect-ratio:3/4;
+  border:1px solid rgba(180,160,230,0.30);
+  box-shadow:0 5px 26px rgba(0,0,0,0.6),inset 0 0 18px rgba(0,0,0,0.4);
+  overflow:hidden;position:relative;margin-bottom:6%;flex-shrink:0;z-index:1;
 }
-.cov-img-box img{width:100%;height:100%;object-fit:cover;display:block;}
-.cov-img-box .noimg{
+.cov-img img{width:100%;height:100%;object-fit:cover;display:block;}
+.cov-img .noimg{
   position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-  background:linear-gradient(145deg,#243d28 0%,#101a0e 100%);
+  background:linear-gradient(145deg,#2e1e50 0%,#130e28 100%);
 }
-.noimg svg{opacity:0.18;}
-.cov-texts{position:relative;z-index:1;}
-.cov-eye{
-  font-family:'Cormorant Upright',serif;font-weight:300;
-  font-size:clamp(7px,0.82vw,10px);letter-spacing:0.48em;text-transform:uppercase;
-  color:#a8d4a8;opacity:0.62;margin-bottom:8px;
-}
-.cov-ttl{
-  font-family:'Playfair Display',serif;font-style:italic;font-weight:400;
-  font-size:clamp(18px,2.8vw,36px);color:#e8f5e8;line-height:1.05;
-  text-shadow:0 2px 18px rgba(0,0,0,0.6);
-}
-.cov-rule{width:46%;height:1px;margin:9px auto;background:linear-gradient(to right,transparent,rgba(160,200,150,0.48),transparent);}
-.cov-auth{
-  font-family:'EB Garamond',serif;font-style:italic;
-  font-size:clamp(9px,1.05vw,13px);color:#a8d4a8;opacity:0.68;letter-spacing:0.12em;
-}
+.noimg svg{opacity:0.16;}
 
-/* ══ INNER DARK PAGES ══ */
+.cov-eye{font-family:'Cormorant Upright',serif;font-weight:300;font-size:clamp(7px,.82vw,10px);letter-spacing:.48em;text-transform:uppercase;color:#c4b4e8;opacity:.60;margin-bottom:8px;}
+.cov-ttl{font-family:'Playfair Display',serif;font-style:italic;font-size:clamp(18px,2.8vw,36px);color:#f0ecfc;line-height:1.05;text-shadow:0 2px 16px rgba(0,0,0,0.6);}
+.cov-rule{width:46%;height:1px;margin:9px auto;background:linear-gradient(to right,transparent,rgba(180,160,230,0.46),transparent);}
+.cov-auth{font-family:'EB Garamond',serif;font-style:italic;font-size:clamp(9px,1.05vw,13px);color:#c4b4e8;opacity:.66;letter-spacing:.12em;}
+
+/* ── inner dark ── */
 .inner-dark{
   width:100%;height:100%;
-  background:linear-gradient(140deg,#1a3020 0%,#0e1c10 100%);
+  background:linear-gradient(140deg,#1a1430 0%,#0e0c20 100%);
   display:flex;align-items:flex-end;justify-content:flex-end;padding:9%;
 }
-.inner-dark span{
-  font-family:'EB Garamond',serif;font-style:italic;
-  font-size:clamp(7px,0.7vw,9px);letter-spacing:0.16em;
-  color:rgba(160,200,150,0.16);writing-mode:vertical-rl;
-}
+.inner-dark span{font-family:'EB Garamond',serif;font-style:italic;font-size:clamp(7px,.70vw,9px);letter-spacing:.16em;color:rgba(180,160,230,0.16);writing-mode:vertical-rl;}
 
-/* ══ PAPER PAGES ══ */
-.paper-bg{
-  width:100%;height:100%;position:relative;overflow:hidden;
-  background:#faf6ef;
+/* ── paper ── */
+.paper{
+  width:100%;height:100%;background:#fdf8f4;position:relative;overflow:hidden;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
 }
-.paper-bg::before{
+.paper::before{
   content:"";position:absolute;inset:0;pointer-events:none;
   background:
-    radial-gradient(ellipse 80% 55% at 18% 14%,rgba(100,140,80,0.04) 0%,transparent 55%),
-    radial-gradient(ellipse 70% 65% at 82% 86%,rgba(80,120,60,0.032) 0%,transparent 55%),
-    radial-gradient(ellipse 100% 100% at 50% 50%,transparent 58%,rgba(0,0,0,0.032) 100%);
+    radial-gradient(ellipse 75% 50% at 18% 14%,rgba(120,100,180,0.04) 0%,transparent 55%),
+    radial-gradient(ellipse 65% 60% at 82% 86%,rgba(90, 70,150,0.03) 0%,transparent 55%),
+    radial-gradient(ellipse 100% 100% at 50% 50%,transparent 58%,rgba(0,0,0,0.028) 100%);
 }
 
-/* ── Title page ── */
+/* ── title page ── */
 .tp{padding:11%;text-align:center;width:100%;position:relative;z-index:1;}
-.tp-vl{width:1px;background:linear-gradient(to bottom,transparent,#3a6b3a);margin:0 auto 16px;}
-.tp-vlb{width:1px;background:linear-gradient(to bottom,#3a6b3a,transparent);margin:16px auto 0;}
-.tp-eye{font-family:'Cormorant Upright',serif;font-weight:300;font-size:clamp(7px,0.78vw,9px);letter-spacing:0.5em;text-transform:uppercase;color:#7a9a7a;margin-bottom:12px;display:block;}
-.tp-ttl{font-family:'Playfair Display',serif;font-style:italic;font-weight:400;font-size:clamp(24px,3.8vw,48px);color:#1a2a1a;line-height:1.0;margin-bottom:8px;display:block;}
-.tp-sub{font-family:'EB Garamond',serif;font-style:italic;font-size:clamp(10px,1.1vw,13px);color:#4a6a4a;margin-bottom:16px;display:block;}
-.tp-rule{width:30%;height:1px;margin:0 auto 14px;background:linear-gradient(to right,transparent,rgba(58,107,58,0.22),transparent);}
-.tp-auth{font-family:'EB Garamond',serif;font-size:clamp(10px,1.1vw,13px);color:#3a503a;letter-spacing:0.1em;display:block;}
+.tp-vl {width:1px;background:linear-gradient(to bottom,transparent,#5a3a8a);margin:0 auto 15px;}
+.tp-vlb{width:1px;background:linear-gradient(to bottom,#5a3a8a,transparent);margin:15px auto 0;}
+.tp-eye{font-family:'Cormorant Upright',serif;font-weight:300;font-size:clamp(7px,.78vw,9px);letter-spacing:.5em;text-transform:uppercase;color:#8a7aaa;margin-bottom:12px;display:block;}
+.tp-ttl{font-family:'Playfair Display',serif;font-style:italic;font-size:clamp(24px,3.8vw,48px);color:#140e22;line-height:1.0;margin-bottom:8px;display:block;}
+.tp-sub{font-family:'EB Garamond',serif;font-style:italic;font-size:clamp(10px,1.1vw,13px);color:#5a4a6e;margin-bottom:16px;display:block;}
+.tp-rule{width:30%;height:1px;margin:0 auto 14px;background:linear-gradient(to right,transparent,rgba(90,58,138,0.20),transparent);}
+.tp-auth{font-family:'EB Garamond',serif;font-size:clamp(10px,1.1vw,13px);color:#302438;letter-spacing:.10em;display:block;}
 
-/* ── Dedication ── */
+/* ── dedication ── */
 .ded{padding:14%;text-align:center;width:100%;position:relative;z-index:1;}
-.ded-q{font-family:'Playfair Display',serif;font-style:italic;font-size:clamp(11px,1.4vw,17px);color:#3a503a;line-height:2;margin-bottom:16px;}
-.ded-at{font-family:'EB Garamond',serif;font-size:clamp(9px,0.98vw,12px);letter-spacing:0.22em;color:#7a9a7a;}
+.ded-q{font-family:'Playfair Display',serif;font-style:italic;font-size:clamp(11px,1.4vw,17px);color:#302438;line-height:2;margin-bottom:16px;}
+.ded-at{font-family:'EB Garamond',serif;font-size:clamp(9px,.98vw,12px);letter-spacing:.22em;color:#8a7aaa;}
 
-/* ── Poem page ── */
-.poem{padding:8% 9%;width:100%;position:relative;z-index:1;}
+/* ── poem ── */
+.poem-wrap{padding:8% 9%;width:100%;position:relative;z-index:1;}
 .poem-inner{text-align:center;display:flex;flex-direction:column;align-items:center;width:82%;margin:0 auto;}
-.p-roman{font-family:'Cormorant Upright',serif;font-weight:300;font-size:clamp(7px,0.74vw,9px);letter-spacing:0.45em;text-transform:uppercase;color:#3a6b3a;opacity:0.48;margin-bottom:7px;}
-.p-title{font-family:'Playfair Display',serif;font-style:italic;font-weight:400;font-size:clamp(14px,1.8vw,22px);color:#1a2a1a;line-height:1.2;margin-bottom:11px;}
-.p-orn{color:#3a6b3a;opacity:0.26;font-size:clamp(9px,0.82vw,11px);letter-spacing:0.65em;margin-bottom:13px;}
-.p-body{font-family:'EB Garamond',serif;font-style:italic;font-size:clamp(11.5px,1.26vw,16px);color:#3a503a;line-height:2.1;text-align:center;}
+.p-roman{font-family:'Cormorant Upright',serif;font-weight:300;font-size:clamp(7px,.74vw,9px);letter-spacing:.45em;text-transform:uppercase;color:#5a3a8a;opacity:.46;margin-bottom:7px;}
+.p-title{font-family:'Playfair Display',serif;font-style:italic;font-size:clamp(14px,1.8vw,22px);color:#140e22;line-height:1.2;margin-bottom:11px;}
+.p-orn{color:#5a3a8a;opacity:.24;font-size:clamp(9px,.82vw,11px);letter-spacing:.65em;margin-bottom:13px;}
+.p-body{font-family:'EB Garamond',serif;font-style:italic;font-size:clamp(11.5px,1.26vw,16px);color:#302438;line-height:2.1;text-align:center;}
 .p-body p{min-height:1.1em;}
-.p-num{position:absolute;bottom:5%;width:100%;text-align:center;font-family:'Cormorant Upright',serif;font-weight:300;font-size:clamp(7px,0.7vw,9px);letter-spacing:0.35em;color:#7a9a7a;opacity:0.36;}
+.p-num{position:absolute;bottom:5%;width:100%;text-align:center;font-family:'Cormorant Upright',serif;font-weight:300;font-size:clamp(7px,.70vw,9px);letter-spacing:.35em;color:#8a7aaa;opacity:.34;}
 
-/* ── Back cover ── */
+/* ── back cover ── */
 .back-cv{
   width:100%;height:100%;position:relative;overflow:hidden;
   display:flex;flex-direction:column;align-items:center;justify-content:center;padding:13%;
   background:
-    radial-gradient(ellipse at 55% 32%,rgba(40,90,45,0.48) 0%,transparent 55%),
-    radial-gradient(ellipse at 28% 68%,rgba(15,45,18,0.50) 0%,transparent 55%),
-    repeating-linear-gradient(122deg,transparent 0,transparent 4px,rgba(255,255,255,0.012) 4px,rgba(255,255,255,0.012) 5px),
-    linear-gradient(150deg,#1c3420 0%,#0e1c10 100%);
+    radial-gradient(ellipse at 55% 32%, rgba(80,55,150,0.44) 0%,transparent 55%),
+    radial-gradient(ellipse at 28% 68%, rgba(35,20, 80,0.48) 0%,transparent 55%),
+    repeating-linear-gradient(122deg,transparent 0,transparent 5px,rgba(255,255,255,0.010) 5px,rgba(255,255,255,0.010) 6px),
+    linear-gradient(150deg,#1e1638 0%,#100c22 100%);
 }
-.back-cv::before{content:"";position:absolute;inset:5%;border:1px solid rgba(160,200,150,0.22);pointer-events:none;}
-.back-cv::after{content:"";position:absolute;inset:6.5%;border:1px solid rgba(160,200,150,0.08);pointer-events:none;}
+.back-cv::before{content:"";position:absolute;inset:5%;border:1px solid rgba(180,160,230,0.20);pointer-events:none;}
+.back-cv::after {content:"";position:absolute;inset:6.5%;border:1px solid rgba(180,160,230,0.07);pointer-events:none;}
 .bc-body{position:relative;z-index:3;text-align:center;}
-.bc-q{font-family:'Playfair Display',serif;font-style:italic;font-size:clamp(10px,1.28vw,15px);color:rgba(232,245,232,0.55);line-height:1.9;margin-bottom:15px;}
-.bc-rule{width:26%;height:1px;margin:0 auto 12px;background:linear-gradient(to right,transparent,rgba(160,200,150,0.36),transparent);}
-.bc-auth{font-family:'EB Garamond',serif;font-style:italic;font-size:clamp(8px,0.86vw,11px);letter-spacing:0.28em;color:#a8d4a8;opacity:0.40;}
+.bc-q{font-family:'Playfair Display',serif;font-style:italic;font-size:clamp(10px,1.28vw,15px);color:rgba(240,236,252,0.54);line-height:1.9;margin-bottom:15px;}
+.bc-rule{width:26%;height:1px;margin:0 auto 12px;background:linear-gradient(to right,transparent,rgba(180,160,230,0.34),transparent);}
+.bc-auth{font-family:'EB Garamond',serif;font-style:italic;font-size:clamp(8px,.86vw,11px);letter-spacing:.28em;color:#c4b4e8;opacity:.38;}
 
-/* ══ CANVAS OVERLAY (page-turn shadow rendering) ══ */
-#turnCanvas{
-  position:absolute;inset:0;
-  pointer-events:none;
-  z-index:100;
-  /* GPU layer */
-  transform:translateZ(0);
-  will-change:transform;
-}
-
-/* ══ NAV ══ */
+/* ═══════════════════════════════
+   NAV
+═══════════════════════════════ */
 .nav{
   position:fixed;bottom:22px;left:50%;transform:translateX(-50%);
-  z-index:500;display:flex;align-items:center;
-  background:rgba(8,14,9,0.84);
-  border:1px solid rgba(160,200,150,0.16);
+  z-index:200;display:flex;align-items:center;
+  background:rgba(8,6,18,0.86);
+  border:1px solid rgba(180,160,230,0.15);
   border-radius:100px;
-  backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
-  box-shadow:0 4px 22px rgba(0,0,0,0.55);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  box-shadow:0 4px 20px rgba(0,0,0,0.55);
   overflow:hidden;user-select:none;
 }
-.nb{
-  background:none;border:none;
-  color:rgba(160,200,150,0.55);cursor:pointer;
-  padding:11px 22px;font-size:15px;
-  transition:color .16s,background .16s;
-  line-height:1;display:flex;align-items:center;
-}
-.nb:hover{color:#a8d4a8;background:rgba(160,200,150,0.07);}
+.nb{background:none;border:none;color:rgba(180,160,230,0.52);cursor:pointer;padding:11px 22px;font-size:15px;transition:color .15s,background .15s;line-height:1;display:flex;align-items:center;}
+.nb:hover{color:#c4b4e8;background:rgba(180,160,230,0.07);}
 .nb:active{transform:scale(0.84);}
-.nb.off{opacity:0.13;pointer-events:none;}
-.ndiv{width:1px;height:15px;background:rgba(160,200,150,0.11);}
-.nlbl{
-  font-family:'Cormorant Upright',serif;font-weight:300;
-  font-size:10px;letter-spacing:0.22em;
-  color:rgba(160,200,150,0.28);
-  padding:0 17px;min-width:66px;text-align:center;
-}
-.khint{
-  position:fixed;bottom:68px;left:50%;transform:translateX(-50%);
-  font-family:'Cormorant Upright',serif;font-size:9px;letter-spacing:0.22em;
-  text-transform:uppercase;color:rgba(160,200,150,0.14);
-  white-space:nowrap;z-index:500;pointer-events:none;
-  animation:kfa 7s ease 3s both;
-}
+.nb.off{opacity:0.12;pointer-events:none;}
+.ndiv{width:1px;height:15px;background:rgba(180,160,230,0.10);}
+.nlbl{font-family:'Cormorant Upright',serif;font-weight:300;font-size:10px;letter-spacing:.22em;color:rgba(180,160,230,0.26);padding:0 17px;min-width:66px;text-align:center;}
+.khint{position:fixed;bottom:68px;left:50%;transform:translateX(-50%);font-family:'Cormorant Upright',serif;font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:rgba(180,160,230,0.12);white-space:nowrap;z-index:200;pointer-events:none;animation:kfa 7s ease 3s both;}
 @keyframes kfa{0%{opacity:0}12%{opacity:1}78%{opacity:1}100%{opacity:0}}
 @media(max-width:600px){.khint{display:none;}}
 </style>
 </head>
 <body>
-<div class="bg"></div>
 
-<div class="scene">
-  <div class="book-shell" id="bookShell">
-    <div class="book-ground-shadow"></div>
-    <div id="book">
-      <!-- canvas sits on top for page-turn shadow -->
-      <canvas id="turnCanvas"></canvas>
-    </div>
+<div class="shell" id="shell">
+  <div class="shadow"></div>
+  <div id="book">
+    <div class="pg" id="pgL"></div>
+    <div class="spine" id="spine"></div>
+    <div class="pg" id="pgR"></div>
   </div>
 </div>
 
@@ -275,30 +220,28 @@ html,body{
 <p class="khint">← → arrow keys</p>
 
 <script>
-/* ══════════════════════════════════════════════
+/* ══════════════════════════════════
    CONFIG  ✏️
-══════════════════════════════════════════════ */
+══════════════════════════════════ */
 var CFG = {
   title:     "Verses",
   subtitle:  "a poetry collection",
   author:    "Your Name",
-  /* ✏️  Cover image — drop file next to index.html, set filename here.
-         Leave "" for no image.  */
+  /* ✏️ Drop image file next to index.html, set filename. Leave "" for none. */
   cover:     "",
   dedication:"In her words, I found a country<br>I did not know I was homesick for.",
   dedAttr:   "— for you, always",
   backQuote: "She is a poem herself —<br>the kind that changes meaning<br>each time you read it."
 };
 
-/* ══════════════════════════════════════════════
+/* ══════════════════════════════════
    POEMS  ✏️
    { title:"...", lines:["line","","blank = stanza break"] }
-   ADD MORE: copy a block, paste inside the array, comma above it.
-══════════════════════════════════════════════ */
+══════════════════════════════════ */
 var POEMS = [
-  /* ── paste poems here ──
+  /* paste your poems here, e.g.:
   {
-    title: "Your Poem Title",
+    title: "Poem Title",
     lines: [
       "First line,",
       "second line.",
@@ -309,557 +252,280 @@ var POEMS = [
   */
 ];
 
-/* ══════════════════════════════════════════════
+/* ══════════════════════════════════
    HELPERS
-══════════════════════════════════════════════ */
+══════════════════════════════════ */
 function roman(n){
   var v=[1000,900,500,400,100,90,50,40,10,9,5,4,1],
       s=["M","CM","D","CD","C","XC","L","XL","X","IX","V","IV","I"],r="";
-  for(var i=0;i<v.length;i++) while(n>=v[i]){r+=s[i];n-=v[i];}
-  return r;
+  for(var i=0;i<v.length;i++)while(n>=v[i]){r+=s[i];n-=v[i];}return r;
 }
-function esc(s){
-  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-}
-function el(tag,css,html){
-  var d=document.createElement(tag);
-  if(css) d.style.cssText=css;
-  if(html!==undefined) d.innerHTML=html;
-  return d;
-}
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
 
-/* ══════════════════════════════════════════════
-   PAGE CONTENT BUILDERS
-   Each returns a div sized to PW × PH
-══════════════════════════════════════════════ */
-function pgDiv(extraClass){
-  var d=document.createElement('div');
-  d.className='pg'+(extraClass?' '+extraClass:'');
-  return d;
-}
-
-function buildFrontCoverL(){
-  var d=pgDiv();
-  d.innerHTML=
-    '<div class="cover-texture">'
-   +'<div class="spine-l"></div>'
-   +'<div class="cn tl"></div><div class="cn tr"></div>'
-   +'<div class="cn bl"></div><div class="cn br"></div>'
-   +'<div class="cov-img-box">'
-   +(CFG.cover
-     ?'<img src="'+esc(CFG.cover)+'" alt=""/>'
-     :'<div class="noimg"><svg width="85" height="110" viewBox="0 0 85 110" fill="none">'
-      +'<rect x="5" y="5" width="75" height="100" rx="1" stroke="#a8d4a8" stroke-width="0.5"/>'
-      +'<line x1="14" y1="25" x2="71" y2="25" stroke="#a8d4a8" stroke-width="0.4"/>'
-      +'<line x1="14" y1="36" x2="71" y2="36" stroke="#a8d4a8" stroke-width="0.4"/>'
-      +'<line x1="14" y1="47" x2="55" y2="47" stroke="#a8d4a8" stroke-width="0.4"/>'
-      +'<line x1="14" y1="63" x2="71" y2="63" stroke="#a8d4a8" stroke-width="0.4"/>'
-      +'<line x1="14" y1="74" x2="62" y2="74" stroke="#a8d4a8" stroke-width="0.4"/>'
-      +'<line x1="14" y1="85" x2="52" y2="85" stroke="#a8d4a8" stroke-width="0.4"/>'
+/* ══════════════════════════════════
+   PAGE HTML BUILDERS
+══════════════════════════════════ */
+function hFrontCover(){
+  return '<div class="cover-face">'
+    +'<div class="sp-l"></div>'
+    +'<div class="cn tl"></div><div class="cn tr"></div>'
+    +'<div class="cn bl"></div><div class="cn br"></div>'
+    +'<div class="cov-img">'
+    +(CFG.cover?'<img src="'+esc(CFG.cover)+'" alt=""/>':'<div class="noimg">'
+      +'<svg width="78" height="102" viewBox="0 0 78 102" fill="none">'
+      +'<rect x="4" y="4" width="70" height="94" rx="1" stroke="#c4b4e8" stroke-width="0.5"/>'
+      +'<line x1="12" y1="22" x2="66" y2="22" stroke="#c4b4e8" stroke-width="0.4"/>'
+      +'<line x1="12" y1="32" x2="66" y2="32" stroke="#c4b4e8" stroke-width="0.4"/>'
+      +'<line x1="12" y1="42" x2="50" y2="42" stroke="#c4b4e8" stroke-width="0.4"/>'
+      +'<line x1="12" y1="56" x2="66" y2="56" stroke="#c4b4e8" stroke-width="0.4"/>'
+      +'<line x1="12" y1="66" x2="56" y2="66" stroke="#c4b4e8" stroke-width="0.4"/>'
+      +'<line x1="12" y1="76" x2="48" y2="76" stroke="#c4b4e8" stroke-width="0.4"/>'
       +'</svg></div>')
-   +'</div>'
-   +'<div class="cov-texts">'
-   +'<p class="cov-eye">A Collection of Poems</p>'
-   +'<h1 class="cov-ttl">'+esc(CFG.title)+'</h1>'
-   +'<div class="cov-rule"></div>'
-   +'<p class="cov-auth">'+esc(CFG.author)+'</p>'
-   +'</div></div>';
-  return d;
+    +'</div>'
+    +'<p class="cov-eye">A Collection of Poems</p>'
+    +'<h1 class="cov-ttl">'+esc(CFG.title)+'</h1>'
+    +'<div class="cov-rule"></div>'
+    +'<p class="cov-auth">'+esc(CFG.author)+'</p>'
+    +'</div>';
+}
+function hInnerDark(flip){
+  return '<div class="inner-dark"'+(flip?' style="align-items:flex-start;justify-content:flex-start;"':'')+'>'+
+    '<span>'+esc(CFG.title)+' · A Poetry Collection</span></div>';
+}
+function hTitle(){
+  return '<div class="paper"><div class="tp">'
+    +'<div class="tp-vl" style="height:clamp(20px,3.5vh,36px)"></div>'
+    +'<span class="tp-eye">A Collection of Poems</span>'
+    +'<span class="tp-ttl">'+esc(CFG.title)+'</span>'
+    +'<span class="tp-sub">'+esc(CFG.subtitle)+'</span>'
+    +'<div class="tp-rule"></div>'
+    +'<span class="tp-auth">'+esc(CFG.author)+'</span>'
+    +'<div class="tp-vlb" style="height:clamp(20px,3.5vh,36px)"></div>'
+    +'</div></div>';
+}
+function hDed(){
+  return '<div class="paper"><div class="ded">'
+    +'<p class="ded-q">'+CFG.dedication+'</p>'
+    +'<p class="ded-at">'+esc(CFG.dedAttr)+'</p>'
+    +'</div></div>';
+}
+function hBlank(){return '<div class="paper"></div>';}
+function hPoem(p,i){
+  var lines=p.lines.map(function(l){return '<p>'+(l.trim()===''?'':esc(l))+'</p>';}).join('');
+  return '<div class="paper"><div class="poem-wrap">'
+    +'<div class="poem-inner">'
+    +'<p class="p-roman">'+roman(i)+'</p>'
+    +'<h2 class="p-title">'+esc(p.title)+'</h2>'
+    +'<p class="p-orn">&#10022; &#10022; &#10022;</p>'
+    +'<div class="p-body">'+lines+'</div>'
+    +'</div><p class="p-num">'+i+'</p>'
+    +'</div></div>';
+}
+function hBackCover(){
+  return '<div class="back-cv">'
+    +'<div class="sp-r"></div>'
+    +'<div class="cn tl"></div><div class="cn tr"></div>'
+    +'<div class="cn bl"></div><div class="cn br"></div>'
+    +'<div class="bc-body">'
+    +'<p class="bc-q">'+CFG.backQuote+'</p>'
+    +'<div class="bc-rule"></div>'
+    +'<p class="bc-auth">'+esc(CFG.author)+'</p>'
+    +'</div></div>';
+}
+function hNoPoems(){
+  return '<div class="paper"><div class="poem-wrap"><div class="poem-inner">'
+    +'<p class="p-roman" style="opacity:.16">&#x2661;</p>'
+    +'<h2 class="p-title" style="opacity:.26">No poems yet</h2>'
+    +'<p class="p-orn" style="opacity:.13">&#10022; &#10022; &#10022;</p>'
+    +'<div class="p-body" style="opacity:.20"><p>Add poems to the POEMS array</p><p>in index.html.</p></div>'
+    +'</div></div></div>';
 }
 
-function buildBackOfFrontR(){
-  var d=pgDiv();
-  d.innerHTML='<div class="inner-dark"><span>'+esc(CFG.title)+' · A Poetry Collection</span></div>';
-  return d;
+/* ══════════════════════════════════
+   BUILD SPREADS
+   Each spread = { L: html, R: html }
+══════════════════════════════════ */
+var S = [];  // spreads array
+
+function build(){
+  S = [];
+  S.push({ L: hFrontCover(),  R: hInnerDark(false) });
+  S.push({ L: hTitle(),       R: hDed() });
+
+  var pp = POEMS.length === 0
+    ? [hNoPoems(), hBlank()]
+    : POEMS.map(function(p,i){ return hPoem(p,i+1); });
+  if(pp.length%2!==0) pp.push(hBlank());
+  for(var i=0;i<pp.length;i+=2) S.push({ L:pp[i], R:pp[i+1] });
+
+  S.push({ L: hInnerDark(true), R: hBackCover() });
 }
 
-function buildTitlePage(){
-  var d=pgDiv();
-  d.innerHTML=
-    '<div class="paper-bg"><div class="tp">'
-   +'<div class="tp-vl" style="height:clamp(20px,3.6vh,38px)"></div>'
-   +'<span class="tp-eye">A Collection of Poems</span>'
-   +'<span class="tp-ttl">'+esc(CFG.title)+'</span>'
-   +'<span class="tp-sub">'+esc(CFG.subtitle)+'</span>'
-   +'<div class="tp-rule"></div>'
-   +'<span class="tp-auth">'+esc(CFG.author)+'</span>'
-   +'<div class="tp-vlb" style="height:clamp(20px,3.6vh,38px)"></div>'
-   +'</div></div>';
-  return d;
-}
-
-function buildDedPage(){
-  var d=pgDiv();
-  d.innerHTML=
-    '<div class="paper-bg"><div class="ded">'
-   +'<p class="ded-q">'+CFG.dedication+'</p>'
-   +'<p class="ded-at">'+esc(CFG.dedAttr)+'</p>'
-   +'</div></div>';
-  return d;
-}
-
-function buildBlank(){
-  var d=pgDiv();
-  d.innerHTML='<div class="paper-bg"></div>';
-  return d;
-}
-
-function buildPoem(poem,idx){
-  var lines=poem.lines.map(function(l){
-    return '<p>'+(l.trim()===''?'':esc(l))+'</p>';
-  }).join('');
-  var d=pgDiv();
-  d.innerHTML=
-    '<div class="paper-bg"><div class="poem">'
-   +'<div class="poem-inner">'
-   +'<p class="p-roman">'+roman(idx)+'</p>'
-   +'<h2 class="p-title">'+esc(poem.title)+'</h2>'
-   +'<p class="p-orn">&#10022; &#10022; &#10022;</p>'
-   +'<div class="p-body">'+lines+'</div>'
-   +'</div><p class="p-num">'+idx+'</p>'
-   +'</div></div>';
-  return d;
-}
-
-function buildFrontOfBackL(){
-  var d=pgDiv();
-  d.innerHTML='<div class="inner-dark" style="align-items:flex-start;justify-content:flex-start;"><span>'+esc(CFG.title)+' · A Poetry Collection</span></div>';
-  return d;
-}
-
-function buildBackCoverR(){
-  var d=pgDiv();
-  d.innerHTML=
-    '<div class="back-cv">'
-   +'<div class="cn tl"></div><div class="cn tr"></div>'
-   +'<div class="cn bl"></div><div class="cn br"></div>'
-   +'<div class="spine-r"></div>'
-   +'<div class="bc-body">'
-   +'<p class="bc-q">'+CFG.backQuote+'</p>'
-   +'<div class="bc-rule"></div>'
-   +'<p class="bc-auth">'+esc(CFG.author)+'</p>'
-   +'</div></div>';
-  return d;
-}
-
-function buildNoPoems(){
-  var d=pgDiv();
-  d.innerHTML=
-    '<div class="paper-bg"><div class="poem">'
-   +'<div class="poem-inner">'
-   +'<p class="p-roman" style="opacity:.2">&#x2661;</p>'
-   +'<h2 class="p-title" style="opacity:.3">No poems yet</h2>'
-   +'<p class="p-orn" style="opacity:.15">&#10022; &#10022; &#10022;</p>'
-   +'<div class="p-body" style="opacity:.25">'
-   +'<p>Add poems to the POEMS array</p>'
-   +'<p>in index.html to fill this book.</p>'
-   +'</div></div></div></div>';
-  return d;
-}
-
-/* ══════════════════════════════════════════════
-   PAGE LIST
-══════════════════════════════════════════════ */
-var PAGES=[];
-
-function buildPageList(){
-  PAGES=[];
-  PAGES.push(buildFrontCoverL());
-  PAGES.push(buildBackOfFrontR());
-  PAGES.push(buildTitlePage());
-  PAGES.push(buildDedPage());
-
-  if(POEMS.length===0){
-    PAGES.push(buildNoPoems());
-    PAGES.push(buildBlank());
-  } else {
-    POEMS.forEach(function(p,i){ PAGES.push(buildPoem(p,i+1)); });
-    if(PAGES.length%2!==0) PAGES.push(buildBlank());
-  }
-
-  PAGES.push(buildFrontOfBackL());
-  PAGES.push(buildBackCoverR());
-  if(PAGES.length%2!==0) PAGES.splice(PAGES.length-2,0,buildBlank());
-}
-
-/* ══════════════════════════════════════════════
+/* ══════════════════════════════════
    SIZING
-══════════════════════════════════════════════ */
+══════════════════════════════════ */
 var PW=0, PH=0, MOB=false;
 
-function calcSize(){
+function size(){
   var W=window.innerWidth, H=window.innerHeight;
-  MOB = W<680;
+  MOB = W < 680;
   if(MOB){
-    PH=Math.min(H*0.74,560);
-    PW=PH/1.414;
-    if(PW>W*0.86){PW=W*0.86;PH=PW*1.414;}
+    PH=Math.min(H*0.74,540); PW=PH/1.414;
+    if(PW>W*0.88){PW=W*0.88; PH=PW*1.414;}
   } else {
-    PH=Math.min(H*0.78,620);
-    PW=PH/1.414;
-    if(PW*2>W*0.84){PW=(W*0.84)/2;PH=PW*1.414;}
+    PH=Math.min(H*0.78,610); PW=PH/1.414;
+    if(PW*2>W*0.84){PW=(W*0.84)/2; PH=PW*1.414;}
   }
   PW=Math.round(PW); PH=Math.round(PH);
+
+  var bk=document.getElementById('book');
+  bk.style.width  = (MOB?PW:PW*2)+'px';
+  bk.style.height = PH+'px';
+
+  document.getElementById('pgL').style.cssText =
+    'width:'+PW+'px;height:'+PH+'px;display:'+(MOB?'none':'block')+';';
+  document.getElementById('pgR').style.cssText =
+    'width:'+PW+'px;height:'+PH+'px;';
+
+  var sp=document.getElementById('spine');
+  sp.style.left   = (PW-12)+'px';
+  sp.style.height = PH+'px';
+  sp.style.display= MOB?'none':'block';
 }
 
-function sizeAll(){
-  var bW=MOB?PW:PW*2;
-  var book=document.getElementById('book');
-  book.style.width=bW+'px';
-  book.style.height=PH+'px';
-  PAGES.forEach(function(p){
-    p.style.width=PW+'px';
-    p.style.height=PH+'px';
-    p.style.minWidth=PW+'px';
-    p.style.minHeight=PH+'px';
-  });
-  // size canvas
-  var cv=document.getElementById('turnCanvas');
-  cv.width=bW; cv.height=PH;
-  cv.style.width=bW+'px'; cv.style.height=PH+'px';
-}
+/* ══════════════════════════════════
+   RENDER  (instant, no animation)
+══════════════════════════════════ */
+var CUR = 0;
 
-/* ══════════════════════════════════════════════
-   SPREAD RENDER (static, no animation)
-══════════════════════════════════════════════ */
-var CUR=0; // current spread index
-
-function totalSpreads(){ return PAGES.length/2; }
-
-function renderStatic(spreadIdx){
-  var book=document.getElementById('book');
-  // detach all PAGES first
-  PAGES.forEach(function(p){ if(p.parentNode) p.parentNode.removeChild(p); });
-  // clear book except canvas
-  Array.from(book.children).forEach(function(c){
-    if(c.id!=='turnCanvas') book.removeChild(c);
-  });
-
-  var L=PAGES[spreadIdx*2], R=PAGES[spreadIdx*2+1];
-  var wrap=el('div','display:flex;width:100%;height:100%;position:relative;');
-
+function render(idx){
+  var sp = S[idx];
   if(MOB){
-    // Show single page on mobile — prefer right, but show left on cover
-    var pg=spreadIdx===0?L:R;
-    pg.style.borderRadius='8px';
-    wrap.style.justifyContent='center';
-    wrap.appendChild(pg);
+    // mobile: show one page — cover shows L, rest show R
+    document.getElementById('pgR').innerHTML = (idx===0) ? sp.L : sp.R;
   } else {
-    // Left page: round left corners only if it's the first spread (cover)
-    if(spreadIdx===0){
-      L.style.borderRadius='6px 0 0 6px';
-    } else {
-      L.style.borderRadius='0';
-    }
-    // Right page: round right corners only on last spread (back cover)
-    if(spreadIdx===totalSpreads()-1){
-      R.style.borderRadius='0 6px 6px 0';
-    } else {
-      R.style.borderRadius='0';
-    }
-    wrap.appendChild(L);
-    wrap.appendChild(R);
+    document.getElementById('pgL').innerHTML = sp.L;
+    document.getElementById('pgR').innerHTML = sp.R;
   }
-  book.insertBefore(wrap,document.getElementById('turnCanvas'));
 }
 
-/* ══════════════════════════════════════════════
-   PAGE-TURN ANIMATION ENGINE
-   Uses Canvas for the curling page + shadows.
-   Real physics: the page curls from the spine
-   outward, casting a gradient shadow on both
-   the page below and the page being revealed.
-══════════════════════════════════════════════ */
-var ANIMATING=false;
+/* ══════════════════════════════════
+   PAGE TURN
+   The simplest reliable animation:
+   slide the two pages horizontally.
+   outgoing slides out, incoming slides in.
+   Uses CSS transition on transform only —
+   no 3D, no preserve-3d, no backface.
+══════════════════════════════════ */
+var BUSY = false;
+var DUR  = 420;  /* ms */
 
 function go(dir){
-  if(ANIMATING) return;
-  var next=CUR+dir;
-  if(next<0||next>=totalSpreads()) return;
-  ANIMATING=true;
-  flipAnimate(dir, function(){
-    CUR=next;
-    renderStatic(CUR);
-    clearCanvas();
+  if(BUSY) return;
+  var next = CUR + dir;
+  if(next < 0 || next >= S.length) return;
+  BUSY = true;
+
+  var pgL = document.getElementById('pgL');
+  var pgR = document.getElementById('pgR');
+  var bk  = document.getElementById('book');
+
+  var curr = S[CUR];
+  var dest = S[next];
+
+  if(MOB){
+    /* ── Mobile: fade swap ── */
+    var el = pgR;
+    el.style.transition = 'none';
+    el.style.opacity    = '1';
+
+    // show outgoing page already set, just fade it out
+    el.style.transition = 'opacity '+DUR+'ms ease';
+    el.style.opacity    = '0';
+
+    setTimeout(function(){
+      CUR = next;
+      el.style.transition = 'none';
+      el.innerHTML = (CUR===0) ? S[CUR].L : S[CUR].R;
+      el.style.opacity = '0';
+      // force reflow
+      void el.offsetWidth;
+      el.style.transition = 'opacity '+(DUR*0.6)+'ms ease';
+      el.style.opacity    = '1';
+      setTimeout(function(){
+        el.style.transition=''; el.style.opacity='';
+        updateNav(); BUSY=false;
+      }, DUR*0.6+20);
+    }, DUR+10);
+    return;
+  }
+
+  /* ── Desktop: horizontal slide ──
+     We place an overlay div on top of the book
+     that slides out, revealing the new page underneath.
+  */
+  var W = PW * 2;
+  var overlay = document.createElement('div');
+  overlay.style.cssText =
+    'position:absolute;top:0;left:0;width:'+W+'px;height:'+PH+'px;'
+    +'display:flex;z-index:50;pointer-events:none;'
+    +'transform:translateX(0);'
+    +'will-change:transform;';
+
+  // overlay shows CURRENT spread
+  var oL = document.createElement('div');
+  oL.style.cssText = 'width:'+PW+'px;height:'+PH+'px;flex-shrink:0;overflow:hidden;';
+  oL.innerHTML = curr.L;
+
+  var oR = document.createElement('div');
+  oR.style.cssText = 'width:'+PW+'px;height:'+PH+'px;flex-shrink:0;overflow:hidden;';
+  oR.innerHTML = curr.R;
+
+  overlay.appendChild(oL);
+  overlay.appendChild(oR);
+  bk.appendChild(overlay);
+
+  // immediately render destination behind the overlay
+  pgL.innerHTML = dest.L;
+  pgR.innerHTML = dest.R;
+
+  // add a subtle shadow on the sliding edge
+  var edgeShadow = document.createElement('div');
+  edgeShadow.style.cssText =
+    'position:absolute;top:0;height:'+PH+'px;width:32px;z-index:51;pointer-events:none;'
+    +(dir>0
+      ? 'right:0;background:linear-gradient(to left,rgba(0,0,0,0.18) 0%,transparent 100%);'
+      : 'left:0;background:linear-gradient(to right,rgba(0,0,0,0.18) 0%,transparent 100%);');
+  overlay.appendChild(edgeShadow);
+
+  // force reflow so transition fires
+  void overlay.offsetWidth;
+
+  overlay.style.transition = 'transform '+DUR+'ms cubic-bezier(0.4, 0, 0.2, 1)';
+  overlay.style.transform  = 'translateX('+(dir > 0 ? -W : W)+'px)';
+
+  setTimeout(function(){
+    bk.removeChild(overlay);
+    CUR = next;
+    render(CUR);
     updateNav();
-    ANIMATING=false;
-  });
+    BUSY = false;
+  }, DUR + 20);
 }
 
-function clearCanvas(){
-  var cv=document.getElementById('turnCanvas');
-  cv.getContext('2d').clearRect(0,0,cv.width,cv.height);
-}
-
-/*
-  flipAnimate:
-  dir +1 = forward  (right page lifts, rotates left, lands as new left)
-  dir -1 = backward (left page lifts, rotates right, lands as new right)
-
-  Technique:
-  1. Render BOTH current spread and destination spread as offscreen canvases.
-  2. Animate a "leaf" that starts flat, curls (using skew+scale to simulate curl),
-     and lands on the other side.
-  3. Draw realistic shadows under the leaf and onto the receiving page.
-*/
-function flipAnimate(dir, done){
-  var fromS=CUR, toS=CUR+dir;
-  var fromL=PAGES[fromS*2], fromR=PAGES[fromS*2+1];
-  var toL=PAGES[toS*2],     toR=PAGES[toS*2+1];
-
-  // Snapshot pages to offscreen canvases
-  snap(fromL, function(snFromL){
-  snap(fromR, function(snFromR){
-  snap(toL,   function(snToL){
-  snap(toR,   function(snToR){
-
-    var cv=document.getElementById('turnCanvas');
-    var ctx=cv.getContext('2d');
-    var W=cv.width, H=cv.height;
-    var bW=MOB?PW:PW*2; // should match W
-
-    // Remove current spread DOM from view (we paint it on canvas)
-    var book=document.getElementById('book');
-    Array.from(book.children).forEach(function(c){
-      if(c.id!=='turnCanvas') book.removeChild(c);
-    });
-
-    var DUR_MS=680, start=null;
-
-    function easeInOut(t){
-      // smooth cubic ease
-      return t<0.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2;
-    }
-
-    function frame(ts){
-      if(!start) start=ts;
-      var raw=Math.min((ts-start)/DUR_MS,1);
-      var t=easeInOut(raw);
-
-      ctx.clearRect(0,0,W,H);
-
-      if(!MOB){
-        // ── DESKTOP: full spread flip ──
-        if(dir>0){
-          // Forward: right page flips to left
-          // Base: draw destination spread (will be revealed)
-          ctx.drawImage(snToL, 0,0,PW,H);
-          ctx.drawImage(snToR, PW,0,PW,H);
-
-          // Shadow on destination left page (cast by flipping leaf)
-          // Fades in as leaf approaches, fades out as it lands
-          var shadowT = Math.sin(t*Math.PI); // peaks at mid-flip
-          if(shadowT>0){
-            var sg=ctx.createLinearGradient(0,0,PW*0.6,0);
-            sg.addColorStop(0,'rgba(0,0,0,'+(.28*shadowT)+')');
-            sg.addColorStop(0.6,'rgba(0,0,0,0)');
-            ctx.fillStyle=sg;
-            ctx.fillRect(0,0,PW,H);
-          }
-
-          // The flipping leaf: starts at right side, rotates leftward
-          // We simulate curl by scaling X and skewing
-          var progress = t; // 0=flat right, 1=flat left
-          var leafX, leafW, skew, alpha=1;
-
-          if(progress<0.5){
-            // First half: leaf lifts from right, narrows (moving toward center)
-            var p2=progress*2; // 0..1
-            leafX = PW + (1-p2)*PW; // starts at PW, moves to PW (center spine)... wait
-            // Actually: leaf starts flush right (x=PW, width=PW)
-            // and folds: its right edge stays at 2*PW, left edge moves right
-            var foldAmt = p2; // 0=open, 1=folded to center
-            leafW = PW*(1-foldAmt*0.98); // narrows as it folds
-            leafX = PW*2 - leafW;         // right-anchored
-            skew  = foldAmt * 12;         // degrees skew for curl feel
-          } else {
-            // Second half: leaf now on left side, opens outward
-            var p2=(progress-0.5)*2; // 0..1
-            leafW = PW*(0.02 + p2*0.98);  // widens as it opens left
-            leafX = PW - leafW;            // left-anchored at spine (PW)
-            skew  = (1-p2)*-12;
-          }
-
-          // Draw the leaf with skew (simulates curl)
-          ctx.save();
-          ctx.translate(leafX + leafW/2, H/2);
-          ctx.transform(1, 0, Math.tan(skew*Math.PI/180), 1, 0, 0);
-          ctx.translate(-(leafW/2), -(H/2));
-
-          // Page face
-          var face = progress<0.5 ? snFromR : snToL;
-          ctx.drawImage(face, 0,0,leafW,H);
-
-          // Fold shadow gradient on the leaf
-          var foldShadow;
-          if(progress<0.5){
-            foldShadow=ctx.createLinearGradient(leafW,0,leafW*0.55,0);
-          } else {
-            foldShadow=ctx.createLinearGradient(0,0,leafW*0.45,0);
-          }
-          var shadowAmt = Math.sin(t*Math.PI)*0.45;
-          foldShadow.addColorStop(0,'rgba(0,0,0,'+shadowAmt+')');
-          foldShadow.addColorStop(1,'rgba(0,0,0,0)');
-          ctx.fillStyle=foldShadow;
-          ctx.fillRect(0,0,leafW,H);
-
-          // Page-edge highlight
-          ctx.fillStyle='rgba(255,255,255,0.06)';
-          ctx.fillRect(0,0,2,H);
-
-          ctx.restore();
-
-          // Still-visible part of from spread (left page — never moves)
-          ctx.drawImage(snFromL, 0,0,PW,H);
-
-          // Gutter shadow (spine center)
-          var gs=ctx.createLinearGradient(PW-12,0,PW+12,0);
-          gs.addColorStop(0,'rgba(0,0,0,0)');
-          gs.addColorStop(0.5,'rgba(0,0,0,0.18)');
-          gs.addColorStop(1,'rgba(0,0,0,0)');
-          ctx.fillStyle=gs;
-          ctx.fillRect(PW-12,0,24,H);
-
-        } else {
-          // Backward: left page flips to right
-          ctx.drawImage(snToL, 0,0,PW,H);
-          ctx.drawImage(snToR, PW,0,PW,H);
-
-          var shadowT=Math.sin(t*Math.PI);
-          if(shadowT>0){
-            var sg=ctx.createLinearGradient(PW*2,0,PW*1.4,0);
-            sg.addColorStop(0,'rgba(0,0,0,'+(.28*shadowT)+')');
-            sg.addColorStop(1,'rgba(0,0,0,0)');
-            ctx.fillStyle=sg;
-            ctx.fillRect(PW,0,PW,H);
-          }
-
-          var progress=t;
-          var leafX, leafW, skew;
-          if(progress<0.5){
-            var p2=progress*2;
-            leafW=PW*(1-p2*0.98);
-            leafX=0;
-            skew=-p2*12;
-          } else {
-            var p2=(progress-0.5)*2;
-            leafW=PW*(0.02+p2*0.98);
-            leafX=PW-leafW+PW; // lands on right
-            skew=(1-p2)*12;
-          }
-
-          ctx.save();
-          ctx.translate(leafX+leafW/2, H/2);
-          ctx.transform(1,0,Math.tan(skew*Math.PI/180),1,0,0);
-          ctx.translate(-(leafW/2),-(H/2));
-
-          var face=progress<0.5?snFromL:snToR;
-          ctx.drawImage(face,0,0,leafW,H);
-
-          var foldShadow=ctx.createLinearGradient(progress<0.5?0:leafW,0,progress<0.5?leafW*0.45:leafW*0.55,0);
-          var shadowAmt=Math.sin(t*Math.PI)*0.45;
-          foldShadow.addColorStop(0,'rgba(0,0,0,'+shadowAmt+')');
-          foldShadow.addColorStop(1,'rgba(0,0,0,0)');
-          ctx.fillStyle=foldShadow;
-          ctx.fillRect(0,0,leafW,H);
-          ctx.fillStyle='rgba(255,255,255,0.06)';
-          ctx.fillRect(leafW-2,0,2,H);
-          ctx.restore();
-
-          ctx.drawImage(snFromR,PW,0,PW,H);
-          var gs=ctx.createLinearGradient(PW-12,0,PW+12,0);
-          gs.addColorStop(0,'rgba(0,0,0,0)');
-          gs.addColorStop(0.5,'rgba(0,0,0,0.18)');
-          gs.addColorStop(1,'rgba(0,0,0,0)');
-          ctx.fillStyle=gs;
-          ctx.fillRect(PW-12,0,24,H);
-        }
-
-      } else {
-        // ── MOBILE: smooth slide ──
-        var fromImg = dir>0?snFromR:snFromL;
-        var toImg   = dir>0?snToR:snToL;
-        var offX    = PW*(1-t)*(dir>0?1:-1);
-        ctx.drawImage(toImg,  dir>0?0:PW*(t),  0, PW, H);
-        ctx.drawImage(fromImg,offX,0,PW,H);
-        // edge shadow
-        var edgeShadow = dir>0
-          ? ctx.createLinearGradient(offX,0,offX+PW*0.08,0)
-          : ctx.createLinearGradient(offX+PW,0,offX+PW*0.92,0);
-        edgeShadow.addColorStop(0,'rgba(0,0,0,0.2)');
-        edgeShadow.addColorStop(1,'rgba(0,0,0,0)');
-        ctx.fillStyle=edgeShadow;
-        ctx.fillRect(0,0,PW,H);
-      }
-
-      if(raw<1){
-        requestAnimationFrame(frame);
-      } else {
-        done();
-      }
-    }
-    requestAnimationFrame(frame);
-
-  });});});});
-}
-
-/* ── Snapshot a page div to a canvas (uses html2canvas polyfill logic) ── */
-/* We use a simpler but reliable method: rasterize via SVG foreignObject */
-function snap(pageEl, cb){
-  var w=PW, h=PH;
-  pageEl.style.width=w+'px';
-  pageEl.style.height=h+'px';
-
-  /* Clone the node, serialize to SVG data URI, paint on canvas */
-  var clone=pageEl.cloneNode(true);
-  clone.style.cssText='width:'+w+'px;height:'+h+'px;position:relative;overflow:hidden;';
-
-  var xhtml='<svg xmlns="http://www.w3.org/2000/svg" width="'+w+'" height="'+h+'">'
-    +'<foreignObject x="0" y="0" width="'+w+'" height="'+h+'">'
-    +'<div xmlns="http://www.w3.org/1999/xhtml">'
-    +pageEl.outerHTML
-    +'</div></foreignObject></svg>';
-
-  var blob=new Blob([xhtml],{type:'image/svg+xml'});
-  var url=URL.createObjectURL(blob);
-  var img=new Image();
-  img.onload=function(){
-    var oc=document.createElement('canvas');
-    oc.width=w; oc.height=h;
-    oc.getContext('2d').drawImage(img,0,0,w,h);
-    URL.revokeObjectURL(url);
-    cb(oc);
-  };
-  img.onerror=function(){
-    /* Fallback: blank canvas */
-    var oc=document.createElement('canvas');
-    oc.width=w; oc.height=h;
-    var ctx2=oc.getContext('2d');
-    ctx2.fillStyle='#faf6ef';
-    ctx2.fillRect(0,0,w,h);
-    cb(oc);
-  };
-  img.src=url;
-}
-
-/* ══════════════════════════════════════════════
-   NAV
-══════════════════════════════════════════════ */
+/* ══════════════════════════════════
+   NAV + INIT
+══════════════════════════════════ */
 function updateNav(){
-  var t=totalSpreads();
-  document.getElementById('nlbl').textContent=(CUR+1)+' / '+t;
-  document.getElementById('btnPrev').classList.toggle('off',CUR===0);
-  document.getElementById('btnNext').classList.toggle('off',CUR===t-1);
+  document.getElementById('nlbl').textContent = (CUR+1)+' / '+S.length;
+  document.getElementById('btnPrev').classList.toggle('off', CUR===0);
+  document.getElementById('btnNext').classList.toggle('off', CUR===S.length-1);
 }
 
-/* ══════════════════════════════════════════════
-   INIT
-══════════════════════════════════════════════ */
 function init(){
-  calcSize();
-  buildPageList();
-  sizeAll();
-  renderStatic(0);
+  build();
+  size();
+  render(0);
   updateNav();
 
   document.addEventListener('keydown',function(e){
@@ -867,20 +533,19 @@ function init(){
     if(e.keyCode===39) go(1);
   });
 
-  var tx=0,ty=0;
-  var sc=document.getElementById('book');
-  sc.addEventListener('touchstart',function(e){tx=e.touches[0].clientX;ty=e.touches[0].clientY;},{passive:true});
-  sc.addEventListener('touchend',function(e){
-    var dx=e.changedTouches[0].clientX-tx,dy=e.changedTouches[0].clientY-ty;
-    if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>36){go(dx<0?1:-1);}
+  var tx=0, ty=0;
+  document.getElementById('book').addEventListener('touchstart',function(e){
+    tx=e.touches[0].clientX; ty=e.touches[0].clientY;
+  },{passive:true});
+  document.getElementById('book').addEventListener('touchend',function(e){
+    var dx=e.changedTouches[0].clientX-tx, dy=e.changedTouches[0].clientY-ty;
+    if(Math.abs(dx)>Math.abs(dy) && Math.abs(dx)>36) go(dx<0?1:-1);
   },{passive:true});
 
-  window.addEventListener('resize',function(){
-    calcSize(); sizeAll(); renderStatic(CUR); clearCanvas(); updateNav();
-  });
+  window.addEventListener('resize',function(){ size(); render(CUR); updateNav(); });
 }
 
-document.addEventListener('DOMContentLoaded',init);
+document.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
 </html>
