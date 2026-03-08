@@ -199,9 +199,109 @@ body::before{
 .khint{position:fixed;bottom:68px;left:50%;transform:translateX(-50%);font-family:'Cormorant Upright',serif;font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:rgba(180,160,230,0.12);white-space:nowrap;z-index:200;pointer-events:none;animation:kfa 7s ease 3s both;}
 @keyframes kfa{0%{opacity:0}12%{opacity:1}78%{opacity:1}100%{opacity:0}}
 @media(max-width:600px){.khint{display:none;}}
+
+/* ═══════════════════════════════════
+   LOCK SCREEN
+═══════════════════════════════════ */
+#lock{
+  position:fixed;inset:0;z-index:9999;
+  display:flex;align-items:center;justify-content:center;
+  background:
+    radial-gradient(ellipse 75% 50% at 50% 0%, rgba(100,80,180,0.10) 0%,transparent 60%),
+    linear-gradient(155deg,#131228 0%,#0a0916 55%,#111020 100%);
+}
+.lock-box{
+  display:flex;flex-direction:column;align-items:center;
+  gap:0;text-align:center;
+  padding:52px 44px;
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(180,160,230,0.14);
+  border-radius:12px;
+  backdrop-filter:blur(18px);
+  box-shadow:0 8px 40px rgba(0,0,0,0.45);
+  width:min(340px,88vw);
+}
+.lock-icon{
+  font-size:28px;opacity:0.35;margin-bottom:22px;
+  color:#c4b4e8;
+}
+.lock-title{
+  font-family:'Playfair Display',serif;font-style:italic;
+  font-size:clamp(20px,3vw,28px);color:#f0ecfc;
+  margin-bottom:6px;
+}
+.lock-sub{
+  font-family:'EB Garamond',serif;font-style:italic;
+  font-size:13px;color:rgba(180,160,230,0.42);
+  margin-bottom:30px;letter-spacing:0.05em;
+}
+.lock-input{
+  width:100%;
+  background:rgba(180,160,230,0.07);
+  border:1px solid rgba(180,160,230,0.20);
+  border-radius:8px;
+  padding:13px 16px;
+  font-family:'EB Garamond',serif;
+  font-size:15px;
+  color:#f0ecfc;
+  text-align:center;
+  letter-spacing:0.15em;
+  outline:none;
+  margin-bottom:14px;
+  transition:border-color 0.2s;
+}
+.lock-input:focus{border-color:rgba(180,160,230,0.45);}
+.lock-input::placeholder{color:rgba(180,160,230,0.25);letter-spacing:0.05em;}
+.lock-btn{
+  width:100%;
+  background:rgba(140,110,210,0.18);
+  border:1px solid rgba(180,160,230,0.28);
+  border-radius:8px;
+  padding:13px;
+  font-family:'Cormorant Upright',serif;font-weight:300;
+  font-size:12px;letter-spacing:0.38em;text-transform:uppercase;
+  color:#c4b4e8;cursor:pointer;
+  transition:background 0.18s,border-color 0.18s;
+}
+.lock-btn:hover{background:rgba(140,110,210,0.28);border-color:rgba(180,160,230,0.45);}
+.lock-btn:active{transform:scale(0.97);}
+.lock-err{
+  margin-top:14px;
+  font-family:'EB Garamond',serif;font-style:italic;
+  font-size:12px;color:rgba(220,120,120,0.70);
+  min-height:16px;letter-spacing:0.04em;
+  opacity:0;transition:opacity 0.2s;
+}
+.lock-err.show{opacity:1;}
+.lock-spinner{
+  width:18px;height:18px;
+  border:2px solid rgba(180,160,230,0.15);
+  border-top-color:rgba(180,160,230,0.6);
+  border-radius:50%;
+  animation:spin 0.7s linear infinite;
+  display:none;margin-top:14px;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+
 </style>
 </head>
 <body>
+
+<!-- ═══ LOCK SCREEN ═══ -->
+<div id="lock">
+  <div class="lock-box">
+    <div class="lock-icon">&#9670;</div>
+    <h1 class="lock-title">Verses</h1>
+    <p class="lock-sub">a poetry collection</p>
+    <input class="lock-input" id="lockInput" type="password"
+           placeholder="enter password"
+           autocomplete="off" autocorrect="off" spellcheck="false"/>
+    <button class="lock-btn" onclick="unlock()">Open</button>
+    <div class="lock-spinner" id="lockSpinner"></div>
+    <p class="lock-err" id="lockErr">incorrect password</p>
+  </div>
+</div>
+
 
 <div class="shell" id="shell">
   <div class="shadow"></div>
@@ -240,19 +340,61 @@ var CFG = {
    POEMS  ✏️
    { title:"...", lines:["line","","blank = stanza break"] }
 ══════════════════════════════════ */
-var POEMS = [
-  /* paste your poems here, e.g.:
-  {
-    title: "Poem Title",
-    lines: [
-      "First line,",
-      "second line.",
-      "",
-      "New stanza."
-    ]
-  },
-  */
-];
+/* ✦ENCRYPTED_POEMS✦ */
+  var ENCRYPTED = "";
+  /* ✦END✦ */
+
+  var POEMS = []; // filled after unlock
+
+  /* ── AES-GCM decrypt (mirrors encrypt.js) ── */
+  async function decryptPoems(b64, password){
+    const buf  = Uint8Array.from(atob(b64), c=>c.charCodeAt(0));
+    const salt = buf.slice(0,16);
+    const iv   = buf.slice(16,28);
+    const ct   = buf.slice(28);
+
+    const km = await crypto.subtle.importKey(
+      'raw', new TextEncoder().encode(password),
+      'PBKDF2', false, ['deriveKey']
+    );
+    const key = await crypto.subtle.deriveKey(
+      { name:'PBKDF2', salt, iterations:200000, hash:'SHA-256' },
+      km,
+      { name:'AES-GCM', length:256 },
+      false, ['decrypt']
+    );
+    const plain = await crypto.subtle.decrypt({ name:'AES-GCM', iv }, key, ct);
+    return JSON.parse(new TextDecoder().decode(plain));
+  }
+
+  async function unlock(){
+    var pw = document.getElementById('lockInput').value;
+    if(!pw) return;
+    var btn = document.querySelector('.lock-btn');
+    var sp  = document.getElementById('lockSpinner');
+    var err = document.getElementById('lockErr');
+    btn.style.display='none'; sp.style.display='block'; err.classList.remove('show');
+
+    if(!ENCRYPTED){
+      // Dev mode: no encryption yet — open directly (run encrypt.js first)
+      document.getElementById('lock').style.display='none';
+      init();
+      return;
+    }
+
+    try {
+      POEMS = await decryptPoems(ENCRYPTED, pw);
+      document.getElementById('lock').style.opacity='0';
+      document.getElementById('lock').style.transition='opacity 0.4s ease';
+      setTimeout(function(){ document.getElementById('lock').style.display='none'; }, 420);
+      init();
+    } catch(e){
+      sp.style.display='none'; btn.style.display='block';
+      err.classList.add('show');
+      document.getElementById('lockInput').value='';
+      document.getElementById('lockInput').focus();
+    }
+  }
 
 /* ══════════════════════════════════
    HELPERS
@@ -422,14 +564,10 @@ function render(idx){
 }
 
 /* ══════════════════════════════════
-   PAGE TURN — CSS 3D half-page flip
-   A single leaf div rotates 180° around
-   the spine edge. Front face = outgoing
-   page, back face = incoming page.
-   The rest of the spread sits static.
+   PAGE TURN — 3D half-page fold
 ══════════════════════════════════ */
 var BUSY = false;
-var DUR  = 600;  /* ms */
+var DUR  = 500;
 
 function go(dir){
   if(BUSY) return;
@@ -437,101 +575,78 @@ function go(dir){
   if(next < 0 || next >= S.length) return;
   BUSY = true;
 
-  var bk   = document.getElementById('book');
-  var pgL  = document.getElementById('pgL');
-  var pgR  = document.getElementById('pgR');
-  var curr = S[CUR];
-  var dest = S[next];
+  var bk  = document.getElementById('book');
+  var pgL = document.getElementById('pgL');
+  var pgR = document.getElementById('pgR');
 
-  /* ── mobile & cover/backcover: plain fade ── */
+  // covers & back cover: simple fade (single-page spreads)
   if(MOB || isSinglePage(CUR) || isSinglePage(next)){
-    bk.style.transition = 'opacity 300ms ease';
-    bk.style.opacity    = '0';
+    bk.style.transition='opacity 200ms ease'; bk.style.opacity='0';
     setTimeout(function(){
-      CUR = next; render(CUR);
-      bk.style.transition = 'none'; bk.style.opacity = '0';
+      CUR=next; render(CUR);
+      bk.style.transition='none'; bk.style.opacity='0';
       void bk.offsetWidth;
-      bk.style.transition = 'opacity 220ms ease'; bk.style.opacity = '1';
-      setTimeout(function(){
-        bk.style.transition=''; bk.style.opacity='';
-        updateNav(); BUSY=false;
-      }, 240);
-    }, 310);
+      bk.style.transition='opacity 160ms ease'; bk.style.opacity='1';
+      setTimeout(function(){ bk.style.transition=''; bk.style.opacity=''; updateNav(); BUSY=false; },180);
+    },210);
     return;
   }
 
-  /* ── Desktop spread flip ──
-     Forward (dir>0): right page flips left  → origin = left edge of right page
-     Backward(dir<0): left page flips right  → origin = right edge of left page
-  */
+  var curr = S[CUR], dest = S[next];
 
-  // 1. Show the destination spread underneath immediately
-  if(dir > 0){
-    pgL.innerHTML = dest.L;   // new left already visible
-    // pgR stays as curr.R (front face of the leaf)
-  } else {
-    pgR.innerHTML = dest.R;   // new right already visible
-    // pgL stays as curr.L (front face of the leaf)
-  }
+  // Pre-load destination behind: only the STATIC half changes now
+  if(dir > 0) pgL.innerHTML = dest.L;   // new left visible behind
+  else        pgR.innerHTML = dest.R;   // new right visible behind
 
-  // 2. Build the leaf — covers exactly one half
+  // Build leaf over the turning half
   var leaf = document.createElement('div');
   leaf.style.cssText =
     'position:absolute;top:0;'
+    +(dir>0 ? 'left:'+PW+'px;transform-origin:left center;' : 'left:0;transform-origin:right center;')
     +'width:'+PW+'px;height:'+PH+'px;'
-    +'transform-style:preserve-3d;'
-    +'-webkit-transform-style:preserve-3d;'
-    +'z-index:30;pointer-events:none;'
-    // start flat (no rotation)
+    +'transform-style:preserve-3d;-webkit-transform-style:preserve-3d;'
     +'transform:rotateY(0deg);'
-    // pivot on the spine edge
-    +(dir>0
-      ? 'left:'+PW+'px;transform-origin:left center;'
-      : 'left:0;transform-origin:right center;');
+    +'z-index:30;pointer-events:none;';
 
-  // front face = the page that's currently showing on that side
+  // front face — outgoing page
   var front = document.createElement('div');
-  front.style.cssText =
-    'position:absolute;inset:0;overflow:hidden;'
+  front.style.cssText='position:absolute;inset:0;overflow:hidden;'
     +'backface-visibility:hidden;-webkit-backface-visibility:hidden;';
   front.innerHTML = dir>0 ? curr.R : curr.L;
 
-  // back face = the page that will be revealed (pre-flipped 180°)
+  // back face — incoming page (pre-mirrored)
   var back = document.createElement('div');
-  back.style.cssText =
-    'position:absolute;inset:0;overflow:hidden;'
+  back.style.cssText='position:absolute;inset:0;overflow:hidden;'
     +'backface-visibility:hidden;-webkit-backface-visibility:hidden;'
     +'transform:rotateY(180deg);-webkit-transform:rotateY(180deg);';
   back.innerHTML = dir>0 ? dest.R : dest.L;
 
-  // subtle fold shadow on the leaf
-  var shadow = document.createElement('div');
-  shadow.style.cssText =
-    'position:absolute;inset:0;z-index:2;pointer-events:none;'
+  // thin shadow on the fold edge
+  var shade = document.createElement('div');
+  shade.style.cssText='position:absolute;inset:0;z-index:2;pointer-events:none;'
     +(dir>0
-      ? 'background:linear-gradient(to right,rgba(0,0,0,0.13) 0%,transparent 35%);'
-      : 'background:linear-gradient(to left, rgba(0,0,0,0.13) 0%,transparent 35%);');
+      ? 'background:linear-gradient(to right,rgba(0,0,0,0.10) 0%,transparent 30%);'
+      : 'background:linear-gradient(to left ,rgba(0,0,0,0.10) 0%,transparent 30%);');
+  front.appendChild(shade);
 
-  front.appendChild(shadow);
   leaf.appendChild(front);
   leaf.appendChild(back);
   bk.appendChild(leaf);
 
-  // 3. Animate: force reflow then rotate
-  void leaf.offsetWidth;
-  leaf.style.transition = 'transform '+DUR+'ms cubic-bezier(0.45,0.05,0.55,0.95)';
-  leaf.style.webkitTransition = 'transform '+DUR+'ms cubic-bezier(0.45,0.05,0.55,0.95)';
-  leaf.style.transform = dir>0 ? 'rotateY(-180deg)' : 'rotateY(180deg)';
-  leaf.style.webkitTransform = dir>0 ? 'rotateY(-180deg)' : 'rotateY(180deg)';
+  void leaf.offsetWidth; // force reflow
 
-  // 4. Clean up and settle
+  leaf.style.transition = 'transform '+DUR+'ms cubic-bezier(0.4,0,0.2,1)';
+  leaf.style.webkitTransition = leaf.style.transition;
+  leaf.style.transform = dir>0 ? 'rotateY(-180deg)' : 'rotateY(180deg)';
+  leaf.style.webkitTransform = leaf.style.transform;
+
   setTimeout(function(){
     bk.removeChild(leaf);
     CUR = next;
     render(CUR);
     updateNav();
     BUSY = false;
-  }, DUR + 30);
+  }, DUR + 25);
 }
 
 /* ══════════════════════════════════
@@ -566,7 +681,13 @@ function init(){
   window.addEventListener('resize',function(){ size(); render(CUR); updateNav(); });
 }
 
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded', function(){
+  document.getElementById('lockInput').focus();
+  document.getElementById('lockInput').addEventListener('keydown', function(e){
+    if(e.key==='Enter') unlock();
+  });
+  // If no encryption baked in yet, still require Enter on lock screen
+});
 </script>
 </body>
 </html>
